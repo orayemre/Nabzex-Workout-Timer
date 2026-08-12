@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-6 -5 34 34' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' style='background-color:%236a8f2d; border-radius:4px;'%3E%3Cpath d='M22 12h-4l-3 9L9 3l-3 9H2'%3E%3C/path%3E%3C/svg%3E">
+<title>Nabzex</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+:root{--bg:#0a0e1a;--bg-card:#2d3d59;--bg-card-dark:#192334;--bg-elevated:#1e293d;--border:#2a3245;--fg:#e8ecf3;--muted:#8893a8;--accent:#ff6b35;--work:#22c55e;--work-glow:rgba(34,197,94,0.4);--rest:#3b82f6;--rest-glow:rgba(59,130,246,0.4);--warmup:#f59e0b;--warmup-glow:rgba(245,158,11,0.4);--danger:#ef4444;--finished:#a855f7}
+*{-webkit-touch-callout:none;touch-action: manipulation;-webkit-tap-highlight-color:transparent;outline:none;border:0;outline:0;box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI";background:var(--bg);color:var(--fg);min-height:100vh;overflow-x:hidden}
+body{background:#1e293c;padding:24px;transition:background 0.8s ease}
+body.phase-work{background:radial-gradient(circle at 50% 30%,rgba(34,197,94,0.18),transparent 60%),radial-gradient(circle at 50% 80%,rgba(34,197,94,0.08),transparent 50%),#1e293c}
+body.phase-rest{background:radial-gradient(circle at 50% 30%,rgba(59,130,246,0.18),transparent 60%),radial-gradient(circle at 50% 80%,rgba(59,130,246,0.08),transparent 50%),#1e293c}
+body.phase-warmup{background:radial-gradient(circle at 50% 30%,rgba(245,158,11,0.15),transparent 60%),radial-gradient(circle at 50% 80%,rgba(245,158,11,0.06),transparent 50%),#1e293c}
+.bt40{margin-bottom: 40px;}
+.container{max-width:720px;margin:0 auto}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:16px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-logo{width:42px;height:42px;border-radius:12px;background:#6a8f2d;display:flex;align-items:center;justify-content:center;}
+.brand-logo svg{width:22px;height:22px}
+.brand-name{font-size:22px;font-weight:800;letter-spacing:-0.02em}
+.brand-tag{font-size:11px;color:#b3ccf8;letter-spacing:0.18em;text-transform:uppercase;font-weight:600}
+.header-right{display:flex;align-items:center;gap:12px}
+.volume-control{display:flex;align-items:center;gap:8px;background:var(--bg-card);padding:8px 14px;border-radius:12px;border:1px solid #6678a2;transition:border-color 0.2s}
+.volume-control:hover{border-color:var(--muted)}
+.volume-control svg{color:#ceddfa;flex-shrink:0}
+input[type="range"]{-webkit-appearance:none;appearance:none;height:4px;width:100px;background:#4b628c;border-radius:2px;outline:none;cursor:pointer}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;background:#7eab36;border-radius:50%;cursor:pointer;transition:transform 0.2s}
+input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+input[type="range"]::-moz-range-thumb{width:14px;height:14px;background:var(--accent);border-radius:50%;cursor:pointer;border:none}
+.header-add-btn{width:38px;height:38px;border-radius:12px;border:1px solid #6678a2;background:var(--bg-card);color:var(--fg);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease;flex-shrink:0}
+.header-add-btn:hover{background:#6b863f;border-color:#85a74e;color:white;transform:translateY(-1px)}
+button{user-select:none;}
+.btn{border:none;border-radius:12px;padding:12px 20px;font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.2s ease;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--bg-elevated);color:var(--fg);border:1px solid var(--border)}
+.btn:hover{background:#232b3d;transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn-primary{background:#6b863f;border:none;color:white;}
+.btn-ghost{border:1px solid #6678a2}
+.btn-ghost:hover{background:var(--bg-elevated)}
+.btn-danger{background:var(--danger);border:none;color:white}
+.btn-danger:hover{background:#dc2626}
+.btn-icon{width:48px;height:48px;padding:0;border-radius:12px}
+.preset-list{display:flex;flex-direction:column;gap:12px}
+.preset-card{background:var(--bg-card);border:1px solid #6678a2;border-radius:16px;padding:10px 14px;cursor:pointer;transition:all 0.25s ease;position:relative;overflow:hidden}
+.preset-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:#6a8f2d;transform:translateX(-4px);transition:transform 0.25s ease}
+.preset-card:hover{border-color:rgb(171 255 53 / 40%);transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,0.3)}
+.preset-card:hover::before{transform:translateX(0)}
+.preset-card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.preset-name{font-size:19px;font-weight:700;margin-bottom:4px;letter-spacing:-0.01em}
+.preset-meta{font-size:17px;color:#b3ccf8}
+.preset-menu-toggle{background:transparent;border:none;margin-right: -14px;color:var(--muted);cursor:pointer;padding:4px 8px;border-radius:8px;transition:background 0.2s;flex-shrink:0;margin-top:-2px}
+.preset-menu-toggle svg{width:22px;height:22px;stroke:#94a1ba;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.preset-actions{max-height:0;overflow:hidden;opacity:0;pointer-events:none;transition:max-height 0.35s ease,opacity 0.3s ease,margin 0.3s ease;display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;margin-top:0;padding-top:0;width:100%}
+.preset-actions.open{max-height:200px;opacity:1;pointer-events:auto;margin-top:-17px;overflow:visible}
+.preset-action-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--bg-elevated);color:#a6b3cd;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease}
+.preset-action-btn:hover{color:var(--fg);background:#2a3346}
+.preset-action-btn.delete:hover{color:var(--danger);border-color:var(--danger);background:rgba(239,68,68,0.1)}
+.preset-action-btn.move:hover{color:var(--work);border-color:var(--work);background:rgba(34,197,94,0.1)}
+.preset-action-btn.duplicate:hover{color:#a78bfa;border-color:#a78bfa;background:rgba(167,139,250,0.1)}
+.preset-action-btn:disabled{opacity:0.58;cursor:not-allowed;pointer-events:none;display:none;}
+.preset-stats{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.stat-chip{background:var(--bg-elevated);padding:6px 12px;border-radius:10px;font-size:16px;color:#bbd3fc;display:flex;align-items:center;gap:6px;font-weight:500}
+.stat-chip strong{color:#cfe0ff;font-weight:700}
+.stat-chip .dot{width:8px;height:8px;border-radius:50%}
+.empty-state{text-align:center;padding:50px 20px;color:#b7c7e7;font-size:16px;background:var(--bg-card);border:1px dashed var(--border);border-radius:16px}
+.data-actions{display:flex;justify-content:center;gap:12px;margin-top:40px;margin-bottom:20px}
+.timer-view{display:none;flex-direction:column;user-select: none;gap:13px}
+.timer-view.active{display:flex;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}
+to{opacity:1;transform:translateY(0)}
+}
+.timer-header{display:flex;justify-content:space-between;}
+.back-btn{background:transparent;border:1px solid #5a6d9a;max-height: 33px;color:#9abaf3;padding:2px 12px 6px 8px;border-radius:10px;cursor:pointer;font-size:18px;font-weight:500;font-family:inherit;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px}
+.back-btn:hover{color:var(--fg);border-color:var(--muted)}
+.timer-title{font-size:19px;font-weight:700;text-align: right;color:var(--fg)}
+.back-btn svg{width:20px;height:20px;}
+.config-summary{display:flex;justify-content:space-around;background:#202d43;border:1px solid #58678b;border-radius:14px;padding:16px}
+.config-item{text-align:center}
+.config-item-label{font-size:11px;color:#a1c3fe;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px;font-weight:600}
+.config-item-value{font-size:18px;font-weight:700}
+.timer-display-wrap{background:var(--bg-card);border:1px solid #6678a2;border-radius:24px;padding:12px 20px 17px 20px;text-align:center;position:relative;overflow:hidden;transition:all 0.6s ease}
+.timer-display-wrap.phase-work{border-color:var(--work);background:linear-gradient(180deg,rgba(34,197,94,0.10),var(--bg-card-dark));box-shadow:0 0 60px var(--work-glow)}
+.timer-display-wrap.phase-rest{border-color:var(--rest);background:linear-gradient(180deg,rgba(59,130,246,0.10),var(--bg-card-dark));box-shadow:0 0 60px var(--rest-glow)}
+.timer-display-wrap.phase-warmup{border-color:var(--warmup);background:linear-gradient(180deg,rgba(245,158,11,0.10),var(--bg-card-dark));box-shadow:0 0 60px var(--warmup-glow)}
+.timer-display-wrap.phase-finished{border-color:var(--finished);background:linear-gradient(180deg,rgba(168,85,247,0.12),var(--bg-card-dark));box-shadow:0 0 60px rgba(168,85,247,0.4)}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 60px var(--work-glow)}
+50%{box-shadow:0 0 90px var(--work-glow)}
+}
+.timer-display-wrap.running.phase-work{animation:pulseGlow 2.4s ease-in-out infinite}
+.phase-label{font-size:17px;letter-spacing:0.32em;text-transform:uppercase;font-weight:700;margin-bottom:4px;transition:color 0.4s}
+.phase-label.work{color:var(--work)}
+.phase-label.rest{color:var(--rest)}
+.phase-label.warmup{color:var(--warmup)}
+.phase-label.finished{color:var(--finished)}
+.phase-label.idle{color:#9abaf3}
+.time-display{font-size:80px;font-weight:800;letter-spacing:-0.02em;line-height:93px;font-variant-numeric:tabular-nums;background:linear-gradient(180deg,var(--fg),#8893a8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;transition:background 0.4s}
+.phase-work .time-display{background:linear-gradient(180deg,#d3e1c3,#88b154);-webkit-background-clip:text;background-clip:text}
+.phase-rest .time-display{background:linear-gradient(180deg,#83bafd,#3973f0);-webkit-background-clip:text;background-clip:text}
+.phase-warmup .time-display{background:linear-gradient(180deg,#fbbf24,#d97706);-webkit-background-clip:text;background-clip:text}
+.phase-finished .time-display{background:linear-gradient(180deg,#c084fc,#9333ea);-webkit-background-clip:text;background-clip:text}
+.round-info{font-size:70px;line-height: 45px;display:flex;align-items:center;justify-content:center;gap:14px;color:#c4d2ee;font-weight:700}
+.rep-display{font-size:70px;line-height: 78px;font-weight:700;color:#c4d2ee;min-height:90px;transition:color 0.4s}
+.tekrar{font-size:42px;vertical-align: 8px;}
+.tekrar2{font-size:34px;vertical-align:10px;letter-spacing:-1px;}
+.phase-work .rep-display{color:#4ade80;text-shadow:0 0 15px rgba(74,222,128,0.3)}
+.phase-rest .rep-display{color:var(--muted)}
+.progress-bar{width:100%;height:4px;background:#445274;border-radius:2px;margin-top:22px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width 0.25s linear,background 0.4s ease;width:0%}
+.phase-work .progress-fill{background:var(--work)}
+.phase-rest .progress-fill{background:var(--rest)}
+.phase-warmup .progress-fill{background:var(--warmup)}
+.phase-finished .progress-fill{background:var(--finished);width:100% !important}
+.controls{display:flex;justify-content:center;align-items:center;gap:16px}
+.play-btn{width:74px;height:74px;border-radius:50%;border:none;background:#6b863f;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgb(205 255 53 / 26%);transition:all 0.2s ease}
+.play-btn:hover{transform:scale(1.05);box-shadow:0 14px 40px rgb(53 192 255 / 38%)}
+.play-btn:active{transform:scale(1)}
+.play-btn svg{width:36px;height:36px}
+.control-btn{width:56px;height:56px;border-radius:50%;border:1px solid #58678b;background:var(--bg-card);color:var(--fg);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease}
+.control-btn:hover{border-color:var(--muted);background:var(--bg-elevated);transform:translateY(-2px)}
+.control-btn:disabled{opacity:0.3;cursor:not-allowed;transform:none}
+.control-btn svg{width:22px;height:22px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:100;padding:10px}
+.modal-overlay.active{display:flex;animation:fadeIn 0.2s ease}
+.modal{background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:12px;width:100%;max-width:480px;max-height:87vh;overflow-y:auto;animation:slideUp 0.3s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}
+to{opacity:1;transform:translateY(0)}
+}
+.modal-title{font-size:22px;font-weight:800;margin-bottom:6px;user-select: none;letter-spacing:-0.01em}
+.modal-subtitle{color:#bbc8e0;font-size:16px;user-select: none;}
+.form-group{margin-bottom:10px}
+.form-label{display:block;font-size:15px;font-weight:700;color:#b0bfda;user-select: none;margin-bottom:8px;letter-spacing:0.08em;text-transform:uppercase}
+.number-input-group{display:flex;align-items:stretch;background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:all 0.2s}
+.number-input-group:focus-within{border-color:#5caec0;box-shadow:0 0 0 3px rgba(84, 210, 255, 0.1)}
+.num-btn{background:var(--bg-elevated);border:none;color:var(--muted);font-size:20px;font-weight:700;cursor:pointer;padding:0 16px;transition:all 0.2s;user-select:none;-webkit-user-select:none}
+.form-input{background:transparent;border:none;color:var(--fg);font-family:inherit;font-size:19px;font-weight:700;text-align:center;flex:1;padding:10px 4px;width:100%;-moz-appearance:textfield}
+.form-input::-webkit-outer-spin-button,.form-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.form-input:focus{outline:none}
+.form-input.text-input{background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:9px 16px}
+.form-input.text-input:focus{outline:none;border-color:#5caec0;box-shadow:0 0 0 3px rgba(84, 210, 255, 0.1)}
+.rep-edit-btn{background:var(--bg-elevated);font-size: 14px;border:1px solid var(--border);border-radius:10px;padding:0 14px;color:var(--fg);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease;height:100%;min-height:46px}
+.rep-edit-btn svg{width:22px;height:22px}
+.rep-modal-item{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #637195}
+.rep-modal-item:last-child{border-bottom:none}
+.rep-modal-item-label{font-size:19px;font-weight:600;user-select: none;color:var(--fg)}
+.rep-modal-item-input-group{display:flex;align-items:center;gap:6px}
+.rep-modal-item-input-group .num-btn{padding:4px 10px;font-size:18px}
+.rep-modal-item-input-group .form-input{width:70px;padding:10px 2px;}
+.rep-total-display{text-align:center;font-size:19px;font-weight:600;color:#bbc8e0}
+.tur-group{display:flex;gap:12px;align-items:stretch}
+.tur-group .number-input-group{flex:1}
+.form-actions{display:flex;gap:10px;margin-top:15px}
+.form-actions .btn{flex:1}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg-elevated);border:1px solid var(--border);padding:14px 22px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;transition:all 0.3s ease;z-index:200;box-shadow:0 10px 30px rgba(0,0,0,0.4);pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+@media (max-width:540px){body{padding:16px}
+.header {gap: 12px;}
+.header-right{flex:1;width: 100%;}
+.volume-control{flex: 1;}
+input[type="range"]{flex: 1;}
+.brand{gap:0}
+.brand-name {width: 0;display: none;}
+.modal-overlay{align-items:baseline}
+.play-btn:hover{transform:scale(1);box-shadow:0 10px 30px rgb(205 255 53 / 26%)}
+.preset-stats{width: 100%;overflow-x: scroll;flex-wrap: nowrap;}
+.preset-stats::-webkit-scrollbar {display: none;}
+.time-display{font-size:100px}
+.config-item-value{font-size:21px}
+.config-item-label{font-size:14px}
+.preset-actions{opacity:1}
+.brand-tag{display:none}
+.preset-card:hover {border-color: transparent;transform: unset;box-shadow: none;}
+.preset-card::before {display: none;}
+}
+@media (max-width:340px){.tekrar{font-size:29px;vertical-align: 8px;}
+.tekrar2{font-size:29px;vertical-align: 8px;}
+.time-display{font-size:88px;}
+.rep-display,.round-info{font-size:50px;}
+.config-item-label {font-size: 13px;}
+}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:#1f2c3f}
+::-webkit-scrollbar-thumb{background:#3d5178;border-radius:4px}
+::selection{background-color:#6a8f2d;color:#ffffff;}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+<div class="brand">
+<div class="brand-logo">
+<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+</svg>
+</div>
+<div>
+<div class="brand-name">Nabzex</div>
+<div class="brand-tag">ZAMANLAYICI</div>
+</div>
+</div>
+<div class="header-right">
+<div class="volume-control" title="Uyarı Ses Seviyesi">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+<path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+<path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+</svg>
+<input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5">
+</div>
+<button class="header-add-btn" id="addPresetBtn" title="Yeni Çalışma Ekle">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+<line x1="12" y1="5" x2="12" y2="19"/>
+<line x1="5" y1="12" x2="19" y2="12"/>
+</svg>
+</button>
+</div>
+</div>
+<div id="presetView">
+<div class="preset-list" id="presetList"></div>
+<div class="data-actions">
+<button class="btn btn-ghost btn-icon" id="exportBtn" title="Dışa Aktar">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+<polyline points="7 10 12 15 17 10"/>
+<line x1="12" y1="15" x2="12" y2="3"/>
+</svg>
+</button>
+<button class="btn btn-ghost btn-icon" id="importBtn" title="İçe Aktar">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+<polyline points="17 8 12 3 7 8"/>
+<line x1="12" y1="3" x2="12" y2="15"/>
+</svg>
+</button>
+<input type="file" id="importInput" accept="application/json" style="display:none">
+</div>
+</div>
+<div id="timerView" class="timer-view">
+<div class="timer-header">
+<button class="back-btn" id="backBtn">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+<path d="M19 12H5M12 19l-7-7 7-7"/>
+</svg>
+Geri
+</button>
+<div class="timer-title" id="timerTitle">Çalışma Adı</div>
+</div>
+<div class="config-summary" id="configSummary"></div>
+<div class="timer-display-wrap phase-idle" id="timerWrap">
+<div class="phase-label idle" id="phaseLabel">ISINMA</div>
+<div class="time-display" id="timeDisplay">00:00</div>
+<div class="rep-display" id="repDisplay"></div>
+<div class="round-info">
+<span id="roundText">0 / 0</span>
+</div>
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+<div class="controls">
+<button class="control-btn" id="prevBtn" title="Önceki Tur">
+<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+</button>
+<button class="play-btn" id="playBtn" title="Başlat / Durdur">
+<svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+</button>
+<button class="control-btn" id="resetBtn" title="Sıfırla">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+<path d="M3 12a9 9 0 1 0 9-9c-2.4 0-4.6 1-6.2 2.6L3 8"/>
+<path d="M3 4v4h4"/>
+</svg>
+</button>
+<button class="control-btn" id="nextBtn" title="Sonraki Tur">
+<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+</button>
+</div>
+</div>
+</div>
+<div class="modal-overlay" id="presetModal">
+<div class="modal">
+<div class="modal-title" id="modalTitle">Yeni Çalışma</div>
+<div class="form-group">
+<label class="form-label">Çalışma Adı</label>
+<input type="text" class="form-input text-input" id="presetName" placeholder="Örn: Şınav" maxlength="40">
+</div>
+<div class="form-group">
+<label class="form-label">Tur Sayısı</label>
+<div class="tur-group">
+<div class="number-input-group">
+<button type="button" class="num-btn" data-target="roundsCount">−</button>
+<input type="number" class="form-input" id="roundsCount" min="1" max="50" value="4">
+<button type="button" class="num-btn" data-target="roundsCount">+</button>
+</div>
+<button type="button" class="rep-edit-btn" id="repOpenBtn" title="Tur tekrar sayılarını düzenle">
+TEKRAR EKLE
+</button>
+</div>
+</div>
+<div class="form-group">
+<label class="form-label">Isınma (dk:sn)</label>
+<div class="number-input-group">
+<button type="button" class="num-btn" data-target="warmupTime">−</button>
+<input type="text" class="form-input" id="warmupTime" value="00:10" maxlength="5">
+<button type="button" class="num-btn" data-target="warmupTime">+</button>
+</div>
+</div>
+<div class="form-group">
+<label class="form-label">Çalışma (dk:sn)</label>
+<div class="number-input-group">
+<button type="button" class="num-btn" data-target="workTime">−</button>
+<input type="text" class="form-input" id="workTime" value="00:30" maxlength="5">
+<button type="button" class="num-btn" data-target="workTime">+</button>
+</div>
+</div>
+<div class="form-group">
+<label class="form-label">Dinlenme (dk:sn)</label>
+<div class="number-input-group">
+<button type="button" class="num-btn" data-target="restTime">−</button>
+<input type="text" class="form-input" id="restTime" value="00:15" maxlength="5">
+<button type="button" class="num-btn" data-target="restTime">+</button>
+</div>
+</div>
+<div class="form-actions">
+<button class="btn btn-ghost" id="cancelBtn">İptal</button>
+<button class="btn btn-primary" id="savePresetBtn">Kaydet</button>
+</div>
+</div>
+</div>
+<div class="modal-overlay" id="repModal">
+<div class="modal">
+<div class="modal-title">Tur Tekrarları</div>
+<div class="modal-subtitle">Her tur için yapılacak tekrar sayısını belirleyin.</div>
+<div id="repModalContent"></div>
+<div class="rep-total-display" id="repTotalDisplay">Toplam Tekrar: 0</div>
+<div class="form-actions" style="margin-top:16px">
+<button class="btn btn-ghost" id="repModalClose">Kapat</button>
+<button class="btn btn-primary" id="repModalSave">Kaydet</button>
+</div>
+</div>
+</div>
+<div class="modal-overlay" id="confirmModal">
+<div class="modal" style="max-width: 380px">
+<div class="modal-title" id="confirmTitle">Emin misiniz?</div>
+<div class="modal-subtitle" id="confirmMsg" style="margin-bottom: 24px"></div>
+<div class="form-actions" style="margin-top: 0">
+<button class="btn btn-ghost" id="confirmCancel">Vazgeç</button>
+<button class="btn btn-danger" id="confirmOk">Sil</button>
+</div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+let presets = [];
+let editingPresetId = null;
+let confirmOnConfirmCallback = null;
+let confirmResultAction = null;
+let repModalSaveRequested = false;
+let appVolume = 0.5;
+let audioCtx = null;
+let scheduledBeepNodes = [];
+const timerState = {
+isRunning: false,
+phase: 'idle',
+currentRound: 0,
+timeLeft: 0,
+totalTimeForPhase: 0,
+config: { warmup: 10, work: 30, rest: 15, rounds: 4, repCounts: [0, 0, 0, 0] },
+activePresetId: null,
+intervalId: null,
+endTime: 0
+};
+function initAudio() {
+if (!audioCtx) {
+try {
+audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+} catch(e) { console.warn("Web Audio API desteklenmiyor."); }
+}
+if (audioCtx && audioCtx.state === 'suspended') {
+audioCtx.resume();
+}
+}
+function clearScheduledBeeps() {
+scheduledBeepNodes.forEach(osc => {
+try { osc.stop(); } catch (e) {}
+});
+scheduledBeepNodes = [];
+}
+function scheduleBeep(atTime, frequency = 880, duration = 0.16, rampDuration = 0.15) {
+if (!audioCtx || appVolume === 0) return;
+const oscillator = audioCtx.createOscillator();
+const gainNode = audioCtx.createGain();
+oscillator.connect(gainNode);
+gainNode.connect(audioCtx.destination);
+oscillator.type = 'triangle';
+oscillator.frequency.value = frequency;
+gainNode.gain.setValueAtTime(appVolume * 1.2, atTime);
+gainNode.gain.exponentialRampToValueAtTime(0.001, atTime + rampDuration);
+oscillator.start(atTime);
+oscillator.stop(atTime + duration);
+scheduledBeepNodes.push(oscillator);
+}
+function scheduleBeep1(atTime) {
+scheduleBeep(atTime, 1318, 0.30, 0.33);
+}
+function scheduleBeep2(atTime) {
+scheduleBeep(atTime, 880, 0.25, 0.25);
+}
+function scheduleBeep3(atTime) {
+scheduleBeep(atTime, 440, 0.25, 0.25);
+}
+function scheduleAudioForPhase(remainingSec, isPhaseStart) {
+clearScheduledBeeps();
+if (!audioCtx || appVolume === 0) return;
+const base = audioCtx.currentTime + 0.05;
+if (isPhaseStart) {
+if (timerState.phase === 'finished') {
+scheduleBeep3(base);
+scheduleBeep3(base + 0.25);
+} else {
+scheduleBeep2(base);
+scheduleBeep2(base + 0.25);
+}
+}
+if (timerState.phase === 'work' || timerState.phase === 'warmup') {
+[3, 2, 1].forEach(v => {
+const offset = remainingSec - v;
+if (offset > 0.05) scheduleBeep1(base + offset);
+});
+}
+if (timerState.phase === 'rest') {
+[10, 9, 8, 7, 6, 5, 4, 3, 2, 1].forEach(v => {
+const offset = remainingSec - v;
+if (offset > 0.05) scheduleBeep1(base + offset);
+});
+}
+}
+function loadPresets() {
+try {
+const data = localStorage.getItem('pulse_presets');
+presets = data ? JSON.parse(data) : [];
+} catch (e) {
+presets = [];
+}
+}
+function savePresets() {
+localStorage.setItem('pulse_presets', JSON.stringify(presets));
+}
+function loadVolume() {
+const v = localStorage.getItem('pulse_volume');
+appVolume = v !== null ? parseFloat(v) : 0.5;
+document.getElementById('volumeSlider').value = appVolume;
+}
+function saveVolume() {
+localStorage.setItem('pulse_volume', appVolume.toString());
+}
+function exportData() {
+const dataObj = { presets: presets, volume: appVolume };
+const dataStr = JSON.stringify(dataObj, null, 2);
+const blob = new Blob([dataStr], { type: 'application/json' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = `nabzex-backup-${new Date().toISOString().split('T')[0]}.json`;
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+URL.revokeObjectURL(url);
+showToast('Veriler dışa aktarıldı');
+}
+function importData(event) {
+const file = event.target.files[0];
+if (!file) return;
+const reader = new FileReader();
+reader.onload = (e) => {
+try {
+const parsed = JSON.parse(e.target.result);
+let importedPresets = [];
+let importedVolume = null;
+if (Array.isArray(parsed)) {
+importedPresets = parsed;
+} else if (parsed && Array.isArray(parsed.presets)) {
+importedPresets = parsed.presets;
+if (typeof parsed.volume === 'number') {
+importedVolume = parsed.volume;
+}
+} else {
+showToast('Geçersiz dosya formatı');
+return;
+}
+const validPresets = importedPresets.filter(p =>
+p && typeof p.name === 'string' &&
+typeof p.warmup === 'number' &&
+typeof p.work === 'number' &&
+typeof p.rest === 'number' &&
+typeof p.rounds === 'number'
+).map(p => {
+let reps = Array.isArray(p.repCounts) ? [...p.repCounts] : [];
+while (reps.length < p.rounds) reps.push(0);
+reps.length = p.rounds;
+return { ...p, repCounts: reps };
+});
+if (validPresets.length > 0) {
+presets = validPresets.map(p => ({ ...p, id: p.id || uid() }));
+savePresets();
+renderPresets();
+if (importedVolume !== null) {
+appVolume = Math.max(0, Math.min(1, importedVolume));
+document.getElementById('volumeSlider').value = appVolume;
+saveVolume();
+showToast(`veriler başarıyla içe aktarıldı`);
+} else {
+showToast(`veriler başarıyla içe aktarıldı`);
+}
+} else {
+showToast('Geçerli çalışma bulunamadı');
+}
+} catch (err) {
+showToast('Dosya okunamadı: Geçersiz JSON');
+}
+event.target.value = '';
+};
+reader.readAsText(file);
+}
+function showToast(msg) {
+const t = document.getElementById('toast');
+t.textContent = msg;
+t.classList.add('show');
+clearTimeout(t._timeout);
+t._timeout = setTimeout(() => t.classList.remove('show'), 2400);
+}
+function showConfirm(title, msg, onConfirm, okText = 'Sil') {
+document.getElementById('confirmTitle').textContent = title;
+document.getElementById('confirmMsg').textContent = msg;
+document.getElementById('confirmOk').textContent = okText;
+document.getElementById('confirmModal').classList.add('active');
+history.pushState({layer: 'confirm'}, '', location.href);
+confirmOnConfirmCallback = onConfirm;
+confirmResultAction = null;
+const okBtn = document.getElementById('confirmOk');
+const cancelBtn = document.getElementById('confirmCancel');
+okBtn.onclick = () => { confirmResultAction = 'ok'; history.back(); };
+cancelBtn.onclick = () => { confirmResultAction = 'cancel'; history.back(); };
+}
+function closeConfirmModal() {
+const modal = document.getElementById('confirmModal');
+modal.classList.remove('active');
+document.getElementById('confirmOk').onclick = null;
+document.getElementById('confirmCancel').onclick = null;
+if (confirmResultAction === 'ok' && confirmOnConfirmCallback) confirmOnConfirmCallback();
+confirmOnConfirmCallback = null;
+confirmResultAction = null;
+}
+function formatTime(s) {
+s = Math.max(0, Math.floor(s));
+const m = Math.floor(s / 60);
+const sec = s % 60;
+return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+}
+function parseDurationToSecs(str) {
+if (!str) return 0;
+let parts = str.split(':').map(p => parseInt(p, 10) || 0);
+if (parts.length === 1) return parts[0];
+return parts[0] * 60 + parts[1];
+}
+function handleDurationInput(e) {
+let val = e.target.value.replace(/\D/g, '');
+if (val.length > 4) val = val.slice(0, 4);
+let mins = 0, secs = 0;
+if (val.length >= 3) {
+mins = parseInt(val.slice(0, val.length - 2));
+secs = parseInt(val.slice(-2));
+} else {
+secs = parseInt(val) || 0;
+}
+if (secs >= 60) {
+mins += Math.floor(secs / 60);
+secs = secs % 60;
+}
+e.target.value = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+function initTimeSegmentInputs() {
+const ids = ['warmupTime', 'workTime', 'restTime'];
+ids.forEach(id => {
+const el = document.getElementById(id);
+if (!el) return;
+el.setAttribute('inputmode', 'numeric');
+el.setAttribute('pattern', '[0-9]*');
+el.setAttribute('autocomplete', 'off');
+el.dataset.editing = '';
+el.addEventListener('click', handleSegmentClick);
+el.addEventListener('focus', handleSegmentClick);
+el.addEventListener('keydown', handleSegmentKeydown);
+el.addEventListener('input', handleSegmentInput);
+el.addEventListener('blur', handleSegmentBlur);
+});
+}
+function handleSegmentClick(e) {
+const el = e.target;
+let pos = el.selectionStart;
+if (pos === null || pos === undefined) pos = 0;
+const segment = pos < 3 ? 'min' : 'sec';
+el.dataset.editing = segment;
+let parts = el.value.split(':');
+if (parts.length !== 2) parts = ['00', '00'];
+if (segment === 'min') parts[0] = '00';
+else parts[1] = '00';
+el.value = parts[0] + ':' + parts[1];
+const start = segment === 'min' ? 0 : 3;
+el.setSelectionRange(start, start + 2);
+}
+function handleSegmentKeydown(e) {
+const allowed = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Enter'];
+if (allowed.includes(e.key)) return;
+if (!/^[0-9]$/.test(e.key)) {
+e.preventDefault();
+}
+}
+function handleSegmentInput(e) {
+const el = e.target;
+const segment = el.dataset.editing || 'min';
+let parts = el.value.split(':');
+if (parts.length !== 2) parts = ['00', '00'];
+let segStr = segment === 'min' ? parts[0] : parts[1];
+let otherStr = segment === 'min' ? parts[1] : parts[0];
+segStr = segStr.replace(/\D/g, '');
+if (segStr.length > 2) segStr = segStr.slice(0, 2);
+if (segStr.length === 2) {
+let num = parseInt(segStr, 10) || 0;
+if (num > 59) num = 59;
+segStr = String(num).padStart(2, '0');
+el.value = segment === 'min' ? segStr + ':' + otherStr : otherStr + ':' + segStr;
+const start = segment === 'min' ? 0 : 3;
+el.setSelectionRange(start, start + 2);
+} else {
+el.value = segment === 'min' ? segStr + ':' + otherStr : otherStr + ':' + segStr;
+const pos = segment === 'min' ? segStr.length : 3 + segStr.length;
+el.setSelectionRange(pos, pos);
+}
+}
+function handleSegmentBlur(e) {
+const el = e.target;
+let parts = el.value.split(':');
+if (parts.length !== 2) parts = ['00', '00'];
+let mins = parseInt(parts[0], 10) || 0;
+let secs = parseInt(parts[1], 10) || 0;
+if (mins > 59) mins = 59;
+if (secs > 59) secs = 59;
+el.value = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+el.dataset.editing = '';
+}
+function uid() {
+return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+function escapeHtml(s) {
+return String(s).replace(/[&<>"']/g, c => ({
+'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+}[c]));
+}
+function renderPresets() {
+const list = document.getElementById('presetList');
+if (presets.length === 0) {
+list.innerHTML = '<div class="empty-state">Henüz çalışma eklenmedi.<br>Sağ üstteki + butonuna tıklayarak ilk antrenmanınızı oluşturun.</div>';
+return;
+}
+list.innerHTML = presets.map((p, index) => {
+const totalSec = p.warmup + (p.work + p.rest) * p.rounds - (p.rest > 0 ? p.rest : 0);
+const totalStr = formatTime(totalSec);
+const isFirst = index === 0;
+const isLast = index === presets.length - 1;
+return `
+<div class="preset-card" data-id="${p.id}">
+<div class="preset-card-header">
+<div>
+<div class="preset-name">${escapeHtml(p.name)}</div>
+<div class="preset-meta">Süre: ${totalStr}</div>
+</div>
+<button class="preset-menu-toggle" data-id="${p.id}" title="Menü">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="12" cy="5" r="2"/>
+<circle cx="12" cy="12" r="2"/>
+<circle cx="12" cy="19" r="2"/>
+</svg>
+</button>
+</div>
+<!-- Actions menüsü header altında, sağa hizalı -->
+<div class="preset-actions" data-id="${p.id}">
+<button class="preset-action-btn move" data-action="move-up" data-id="${p.id}" title="Yukarı Taşı" ${isFirst ? 'disabled' : ''}>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+<polyline points="18 15 12 9 6 15"></polyline>
+</svg>
+</button>
+<button class="preset-action-btn move" data-action="move-down" data-id="${p.id}" title="Aşağı Taşı" ${isLast ? 'disabled' : ''}>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</button>
+<button class="preset-action-btn edit" data-action="edit" data-id="${p.id}" title="Düzenle" aria-label="Düzenle">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M12 20h9"/>
+<path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+</svg>
+</button>
+<button class="preset-action-btn delete" data-action="delete" data-id="${p.id}" title="Sil" aria-label="Sil">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+</svg>
+</button>
+<button class="preset-action-btn duplicate" data-action="duplicate" data-id="${p.id}" title="Kopyala">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+</svg>
+</button>
+</div>
+<div class="preset-stats">
+<span class="stat-chip"><span class="dot" style="background:var(--warmup)"></span>Isınma <strong>${formatTime(p.warmup)}</strong></span>
+<span class="stat-chip"><span class="dot" style="background:var(--work)"></span>Çalışma <strong>${formatTime(p.work)}</strong></span>
+<span class="stat-chip"><span class="dot" style="background:var(--rest)"></span>Dinlenme <strong>${formatTime(p.rest)}</strong></span>
+<span class="stat-chip"><span class="dot" style="background:var(--accent)"></span>Tur <strong>${p.rounds}</strong></span>
+</div>
+</div>
+`;
+}).join('');
+list.querySelectorAll('.preset-card').forEach(card => {
+card.addEventListener('click', (e) => {
+if (e.target.closest('[data-action]') || e.target.closest('.preset-menu-toggle')) return;
+loadPresetToTimer(card.dataset.id);
+});
+});
+list.querySelectorAll('.preset-menu-toggle').forEach(btn => {
+btn.addEventListener('click', (e) => {
+e.stopPropagation();
+const id = btn.dataset.id;
+const actions = list.querySelector(`.preset-actions[data-id="${id}"]`);
+if (actions) {
+actions.classList.toggle('open');
+}
+});
+});
+list.querySelectorAll('[data-action="move-up"]').forEach(btn => {
+btn.addEventListener('click', (e) => {
+e.stopPropagation();
+movePreset(btn.dataset.id, 'up');
+});
+});
+list.querySelectorAll('[data-action="move-down"]').forEach(btn => {
+btn.addEventListener('click', (e) => {
+e.stopPropagation();
+movePreset(btn.dataset.id, 'down');
+});
+});
+list.querySelectorAll('[data-action="edit"]').forEach(btn => {
+btn.addEventListener('click', (e) => {
+e.stopPropagation();
+openPresetModal(btn.dataset.id);
+});
+});
+list.querySelectorAll('[data-action="delete"]').forEach(btn => {
+btn.addEventListener('click', (e) => {
+e.stopPropagation();
+handleDeletePreset(btn.dataset.id);
+});
+});
+list.querySelectorAll('[data-action="duplicate"]').forEach(btn => {
+btn.addEventListener('click', (e) => {
+e.stopPropagation();
+duplicatePreset(btn.dataset.id);
+});
+});
+}
+function duplicatePreset(id) {
+const originalIndex = presets.findIndex(p => p.id === id);
+if (originalIndex === -1) return;
+const original = presets[originalIndex];
+let newName = original.name + ' (kopya)';
+let counter = 1;
+while (presets.some(p => p.name === newName)) {
+counter++;
+newName = original.name + ` (kopya ${counter})`;
+}
+const copy = { ...original, id: uid(), name: newName };
+presets.splice(originalIndex + 1, 0, copy);
+savePresets();
+renderPresets();
+showToast('Çalışma kopyalandı');
+}
+function movePreset(id, direction) {
+const index = presets.findIndex(p => p.id === id);
+if (index === -1) return;
+if (direction === 'up' && index > 0) {
+[presets[index], presets[index - 1]] = [presets[index - 1], presets[index]];
+} else if (direction === 'down' && index < presets.length - 1) {
+[presets[index], presets[index + 1]] = [presets[index + 1], presets[index]];
+}
+savePresets();
+renderPresets();
+}
+let currentRepCounts = [];
+function updateRepTotal() {
+const inputs = document.querySelectorAll('#repModalContent .form-input');
+let total = 0;
+inputs.forEach(inp => {
+total += parseInt(inp.value) || 0;
+});
+document.getElementById('repTotalDisplay').textContent = `Toplam Tekrar: ${total}`;
+}
+function openRepModal() {
+const rounds = parseInt(document.getElementById('roundsCount').value) || 1;
+while (currentRepCounts.length < rounds) currentRepCounts.push(0);
+currentRepCounts.length = rounds;
+const container = document.getElementById('repModalContent');
+container.innerHTML = '';
+for (let i = 0; i < rounds; i++) {
+const div = document.createElement('div');
+div.className = 'rep-modal-item';
+const label = document.createElement('span');
+label.className = 'rep-modal-item-label';
+label.textContent = `Tur ${i+1}`;
+const group = document.createElement('div');
+group.className = 'rep-modal-item-input-group';
+const minus = document.createElement('button');
+minus.type = 'button';
+minus.className = 'num-btn';
+minus.textContent = '−';
+minus.dataset.index = i;
+const input = document.createElement('input');
+input.type = 'number';
+input.className = 'form-input';
+input.min = 0;
+input.max = 9999;
+input.value = currentRepCounts[i] || 0;
+input.dataset.index = i;
+const plus = document.createElement('button');
+plus.type = 'button';
+plus.className = 'num-btn';
+plus.textContent = '+';
+plus.dataset.index = i;
+const updateInput = (idx, delta) => {
+let val = parseInt(document.querySelectorAll('.rep-modal-item-input-group .form-input')[idx].value) || 0;
+val += delta;
+if (val < 0) val = 0;
+document.querySelectorAll('.rep-modal-item-input-group .form-input')[idx].value = val;
+currentRepCounts[idx] = val;
+updateRepTotal();
+};
+minus.addEventListener('click', () => updateInput(i, -1));
+plus.addEventListener('click', () => updateInput(i, 1));
+input.addEventListener('input', (e) => {
+let val = parseInt(e.target.value) || 0;
+if (val < 0) val = 0;
+currentRepCounts[i] = val;
+updateRepTotal();
+});
+group.appendChild(minus);
+group.appendChild(input);
+group.appendChild(plus);
+div.appendChild(label);
+div.appendChild(group);
+container.appendChild(div);
+}
+updateRepTotal();
+document.getElementById('repModal').classList.add('active');
+history.pushState({layer: 'rep'}, '', location.href);
+}
+function closeRepModal(save = false) {
+if (save) {
+const inputs = document.querySelectorAll('#repModalContent .form-input');
+inputs.forEach((inp, idx) => {
+currentRepCounts[idx] = parseInt(inp.value) || 0;
+});
+}
+document.getElementById('repModal').classList.remove('active');
+}
+function openPresetModal(id = null) {
+editingPresetId = id;
+const modal = document.getElementById('presetModal');
+const title = document.getElementById('modalTitle');
+if (id) {
+const p = presets.find(x => x.id === id);
+if (!p) return;
+title.textContent = 'Çalışmayı Düzenle';
+document.getElementById('presetName').value = p.name;
+document.getElementById('warmupTime').value = formatTime(p.warmup);
+document.getElementById('workTime').value = formatTime(p.work);
+document.getElementById('restTime').value = formatTime(p.rest);
+document.getElementById('roundsCount').value = p.rounds;
+currentRepCounts = Array.isArray(p.repCounts) ? [...p.repCounts] : [];
+while (currentRepCounts.length < p.rounds) currentRepCounts.push(0);
+currentRepCounts.length = p.rounds;
+} else {
+title.textContent = 'Yeni Çalışma';
+document.getElementById('presetName').value = '';
+document.getElementById('warmupTime').value = '00:10';
+document.getElementById('workTime').value = '00:30';
+document.getElementById('restTime').value = '00:15';
+document.getElementById('roundsCount').value = 4;
+currentRepCounts = [0, 0, 0, 0];
+}
+modal.classList.add('active');
+history.pushState({layer: 'preset'}, '', location.href);
+setTimeout(() => document.getElementById('presetName').focus(), 100);
+}
+function closePresetModal() {
+document.getElementById('presetModal').classList.remove('active');
+editingPresetId = null;
+}
+function savePresetFromModal() {
+const name = document.getElementById('presetName').value.trim();
+const warmup = Math.max(0, parseDurationToSecs(document.getElementById('warmupTime').value));
+const work = Math.max(1, parseDurationToSecs(document.getElementById('workTime').value));
+const rest = Math.max(0, parseDurationToSecs(document.getElementById('restTime').value));
+const rounds = Math.max(1, parseInt(document.getElementById('roundsCount').value) || 1);
+while (currentRepCounts.length < rounds) currentRepCounts.push(0);
+currentRepCounts.length = rounds;
+if (!name) {
+showToast('Lütfen çalışma adı girin');
+document.getElementById('presetName').focus();
+return;
+}
+if (editingPresetId) {
+const idx = presets.findIndex(p => p.id === editingPresetId);
+if (idx >= 0) {
+presets[idx] = { ...presets[idx], name, warmup, work, rest, rounds, repCounts: [...currentRepCounts] };
+if (timerState.activePresetId === editingPresetId) {
+timerState.config = { warmup, work, rest, rounds, repCounts: [...currentRepCounts] };
+renderConfigSummary();
+if (timerState.phase === 'idle') resetTimer();
+}
+showToast('Çalışma güncellendi');
+}
+} else {
+presets.unshift({ id: uid(), name, warmup, work, rest, rounds, repCounts: [...currentRepCounts] });
+showToast('Çalışma eklendi');
+}
+savePresets();
+renderPresets();
+history.back();
+}
+function handleDeletePreset(id) {
+const p = presets.find(x => x.id === id);
+if (!p) return;
+showConfirm(
+'Çalışmayı Sil',
+`"${p.name}" çalışmasını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
+() => {
+presets = presets.filter(x => x.id !== id);
+savePresets();
+renderPresets();
+if (timerState.activePresetId === id) {
+timerState.activePresetId = null;
+showPresetView();
+}
+showToast('Çalışma silindi');
+}
+);
+}
+function loadPresetToTimer(id) {
+const p = presets.find(x => x.id === id);
+if (!p) return;
+let reps = Array.isArray(p.repCounts) ? [...p.repCounts] : [];
+while (reps.length < p.rounds) reps.push(0);
+reps.length = p.rounds;
+timerState.config = { warmup: p.warmup, work: p.work, rest: p.rest, rounds: p.rounds, repCounts: reps };
+timerState.activePresetId = id;
+timerState.isRunning = false;
+timerState.phase = 'idle';
+timerState.currentRound = 0;
+if (timerState.intervalId) {
+clearInterval(timerState.intervalId);
+timerState.intervalId = null;
+}
+document.getElementById('timerTitle').textContent = p.name;
+renderConfigSummary();
+showTimerView();
+resetTimer();
+}
+function renderConfigSummary() {
+const c = timerState.config;
+document.getElementById('configSummary').innerHTML = `
+<div class="config-item">
+<div class="config-item-label">Isınma</div>
+<div class="config-item-value">${formatTime(c.warmup)}</div>
+</div>
+<div class="config-item">
+<div class="config-item-label">Çalışma</div>
+<div class="config-item-value">${formatTime(c.work)}</div>
+</div>
+<div class="config-item">
+<div class="config-item-label">Dinlenme</div>
+<div class="config-item-value">${formatTime(c.rest)}</div>
+</div>
+<div class="config-item">
+<div class="config-item-label">Tur</div>
+<div class="config-item-value">${c.rounds}</div>
+</div>
+`;
+}
+function showTimerView() {
+document.querySelector('.header').style.display = 'none';
+document.getElementById('presetView').style.display = 'none';
+document.getElementById('timerView').classList.add('active');
+history.pushState({view: 'timer'}, '', location.href);
+}
+function showPresetView() {
+pauseTimer();
+document.querySelector('.header').style.display = 'flex';
+document.getElementById('timerView').classList.remove('active');
+document.getElementById('presetView').style.display = 'block';
+document.body.className = '';
+}
+function setPhase(phase) {
+timerState.phase = phase;
+const wrap = document.getElementById('timerWrap');
+const label = document.getElementById('phaseLabel');
+wrap.className = 'timer-display-wrap phase-' + phase;
+if (timerState.isRunning) wrap.classList.add('running');
+const labels = {
+idle: 'ISINMA',
+warmup: 'ISINMA',
+work: 'ÇALIŞMA',
+rest: 'DİNLENME',
+finished: 'TAMAMLANDI'
+};
+label.textContent = labels[phase] || 'ISINMA';
+label.className = 'phase-label ' + phase;
+document.body.className = '';
+if (phase === 'work' || phase === 'rest' || phase === 'warmup') {
+document.body.classList.add('phase-' + phase);
+}
+}
+function updateDisplay() {
+document.getElementById('timeDisplay').textContent = formatTime(timerState.timeLeft);
+const total = timerState.totalTimeForPhase || 1;
+const elapsed = total - timerState.timeLeft;
+const pct = Math.max(0, Math.min(100, (elapsed / total) * 100));
+document.getElementById('progressFill').style.width = pct + '%';
+const rounds = timerState.config.rounds;
+const roundText = document.getElementById('roundText');
+const repDisplay = document.getElementById('repDisplay');
+const timeDisplay = document.getElementById('timeDisplay');
+const totalReps = timerState.config.repCounts.reduce((a, b) => a + b, 0);
+if (totalReps === 0) {
+repDisplay.style.display = 'none';
+timeDisplay.classList.add('bt40');
+} else {
+repDisplay.style.display = '';
+timeDisplay.classList.remove('bt40');
+}
+if (timerState.phase === 'idle') {
+roundText.textContent = '0 / ' + rounds;
+repDisplay.textContent = '';
+} else if (timerState.phase === 'finished') {
+roundText.textContent = rounds + ' / ' + rounds;
+} else if (timerState.phase === 'warmup') {
+roundText.textContent = '1 / ' + rounds;
+repDisplay.textContent = '';
+} else {
+roundText.textContent = (timerState.currentRound + 1) + ' / ' + rounds;
+if (timerState.phase === 'work' && timerState.config.repCounts && timerState.config.repCounts[timerState.currentRound] > 0) {
+repDisplay.innerHTML = timerState.config.repCounts[timerState.currentRound] + ' <span class="tekrar">TEKR.</span>';
+} else {
+repDisplay.textContent = '';
+}
+}
+}
+function startPhase(phase) {
+setPhase(phase);
+const c = timerState.config;
+if (phase === 'warmup') {
+timerState.timeLeft = c.warmup;
+timerState.totalTimeForPhase = c.warmup;
+} else if (phase === 'work') {
+timerState.timeLeft = c.work;
+timerState.totalTimeForPhase = c.work;
+} else if (phase === 'rest') {
+timerState.timeLeft = c.rest;
+timerState.totalTimeForPhase = c.rest;
+}
+updateDisplay();
+}
+function nextPhase() {
+const c = timerState.config;
+const phase = timerState.phase;
+if (phase === 'idle' || phase === 'finished') {
+timerState.currentRound = 0;
+if (c.warmup > 0) startPhase('warmup');
+else startPhase('work');
+} else if (phase === 'warmup') {
+startPhase('work');
+} else if (phase === 'work') {
+if (c.rest > 0 && timerState.currentRound < c.rounds - 1) {
+startPhase('rest');
+} else {
+timerState.currentRound++;
+if (timerState.currentRound >= c.rounds) {
+finishTimer();
+} else {
+startPhase('work');
+}
+}
+} else if (phase === 'rest') {
+timerState.currentRound++;
+if (timerState.currentRound >= c.rounds) {
+finishTimer();
+} else {
+startPhase('work');
+}
+}
+}
+function prevPhase() {
+const c = timerState.config;
+const phase = timerState.phase;
+if (phase === 'finished') {
+timerState.currentRound = c.rounds - 1;
+startPhase('work');
+} else if (phase === 'rest') {
+startPhase('work');
+} else if (phase === 'work') {
+if (timerState.currentRound === 0) {
+if (c.warmup > 0) {
+startPhase('warmup');
+} else {
+resetTimer();
+}
+} else {
+if (c.rest > 0) {
+timerState.currentRound--;
+startPhase('rest');
+} else {
+timerState.currentRound--;
+startPhase('work');
+}
+}
+} else if (phase === 'warmup') {
+resetTimer();
+}
+}
+function tick() {
+const now = Date.now();
+const remainingMs = timerState.endTime - now;
+const remaining = Math.max(0, Math.ceil(remainingMs / 1000));
+if (remaining !== timerState.timeLeft) {
+timerState.timeLeft = remaining;
+updateDisplay();
+}
+if (remainingMs <= 0) {
+clearInterval(timerState.intervalId);
+timerState.intervalId = null;
+if (timerState.isRunning) {
+nextPhase();
+if (timerState.phase !== 'finished') {
+timerState.endTime = Date.now() + timerState.timeLeft * 1000;
+timerState.intervalId = setInterval(tick, 100);
+scheduleAudioForPhase(timerState.timeLeft, true);
+} else {
+timerState.isRunning = false;
+updatePlayButton();
+}
+}
+}
+}
+function startTimer() {
+initAudio();
+if (timerState.phase === 'finished') {
+resetTimer();
+}
+let isNewPhase = false;
+if (timerState.phase === 'idle') {
+nextPhase();
+isNewPhase = true;
+}
+if (timerState.phase === 'finished') return;
+timerState.isRunning = true;
+timerState.endTime = Date.now() + timerState.timeLeft * 1000;
+if (timerState.intervalId) clearInterval(timerState.intervalId);
+timerState.intervalId = setInterval(tick, 100);
+scheduleAudioForPhase(timerState.timeLeft, isNewPhase);
+updatePlayButton();
+document.getElementById('timerWrap').classList.add('running');
+}
+function pauseTimer() {
+timerState.isRunning = false;
+if (timerState.intervalId) {
+clearInterval(timerState.intervalId);
+timerState.intervalId = null;
+}
+clearScheduledBeeps();
+updatePlayButton();
+document.getElementById('timerWrap').classList.remove('running');
+}
+function resetTimer() {
+pauseTimer();
+timerState.currentRound = 0;
+setPhase('idle');
+if (timerState.config.warmup > 0) {
+timerState.timeLeft = timerState.config.warmup;
+timerState.totalTimeForPhase = timerState.config.warmup;
+} else {
+timerState.timeLeft = timerState.config.work;
+timerState.totalTimeForPhase = timerState.config.work;
+}
+updateDisplay();
+document.getElementById('repDisplay').textContent = '';
+}
+function finishTimer() {
+setPhase('finished');
+timerState.isRunning = false;
+timerState.timeLeft = 0;
+timerState.totalTimeForPhase = 1;
+updateDisplay();
+document.getElementById('timerWrap').classList.remove('running');
+scheduleAudioForPhase(0, true);
+const totalReps = timerState.config.repCounts.reduce((a, b) => a + b, 0);
+const repDisplay = document.getElementById('repDisplay');
+const timeDisplay = document.getElementById('timeDisplay');
+if (totalReps > 0) {
+repDisplay.innerHTML = totalReps + ' <span class="tekrar2">TEKR. ✔</span>';
+repDisplay.style.display = '';
+timeDisplay.classList.remove('bt40');
+} else {
+repDisplay.textContent = '';
+repDisplay.style.display = 'none';
+timeDisplay.classList.add('bt40');
+}
+updatePlayButton();
+}
+function updatePlayButton() {
+const icon = document.getElementById('playIcon');
+if (timerState.isRunning) {
+icon.innerHTML = '<path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>';
+} else {
+icon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+}
+}
+function skipNext() {
+if (timerState.phase === 'finished') return;
+const wasRunning = timerState.isRunning;
+if (timerState.intervalId) {
+clearInterval(timerState.intervalId);
+timerState.intervalId = null;
+}
+clearScheduledBeeps();
+nextPhase();
+if (timerState.phase === 'finished') return;
+if (wasRunning) {
+timerState.isRunning = true;
+timerState.endTime = Date.now() + timerState.timeLeft * 1000;
+timerState.intervalId = setInterval(tick, 100);
+scheduleAudioForPhase(timerState.timeLeft, true);
+document.getElementById('timerWrap').classList.add('running');
+}
+}
+function skipPrev() {
+if (timerState.phase === 'idle') return;
+const wasRunning = timerState.isRunning;
+if (timerState.intervalId) {
+clearInterval(timerState.intervalId);
+timerState.intervalId = null;
+}
+clearScheduledBeeps();
+prevPhase();
+if (timerState.phase === 'idle' || timerState.phase === 'finished') return;
+if (wasRunning) {
+timerState.isRunning = true;
+timerState.endTime = Date.now() + timerState.timeLeft * 1000;
+timerState.intervalId = setInterval(tick, 100);
+scheduleAudioForPhase(timerState.timeLeft, true);
+document.getElementById('timerWrap').classList.add('running');
+}
+}
+function setupNumberInputs() {
+document.querySelectorAll('.num-btn').forEach(btn => {
+btn.addEventListener('click', (e) => {
+const targetId = e.currentTarget.dataset.target;
+const input = document.getElementById(targetId);
+const step = e.currentTarget.textContent.trim() === '+' ? 1 : -1;
+if (targetId === 'roundsCount') {
+const min = parseInt(input.min) || 0;
+const max = parseInt(input.max) || 9999;
+let currentVal = parseInt(input.value) || 0;
+currentVal += step;
+if (currentVal < min) currentVal = min;
+if (currentVal > max) currentVal = max;
+input.value = currentVal;
+} else {
+let totalSecs = parseDurationToSecs(input.value);
+totalSecs += step;
+if (totalSecs < 0) totalSecs = 0;
+if (totalSecs > 5999) totalSecs = 5999;
+input.value = formatTime(totalSecs);
+}
+});
+});
+initTimeSegmentInputs();
+}
+document.getElementById('addPresetBtn').addEventListener('click', () => openPresetModal());
+document.getElementById('cancelBtn').addEventListener('click', () => history.back());
+document.getElementById('savePresetBtn').addEventListener('click', savePresetFromModal);
+document.getElementById('presetModal').addEventListener('click', (e) => {
+if (e.target.id === 'presetModal') history.back();
+});
+document.getElementById('confirmModal').addEventListener('click', (e) => {
+if (e.target.id === 'confirmModal') document.getElementById('confirmCancel').click();
+});
+document.getElementById('backBtn').addEventListener('click', function() {
+if (document.getElementById('timerView').classList.contains('active')) {
+history.back();
+} else {
+showPresetView();
+}
+});
+window.addEventListener('popstate', function() {
+if (document.getElementById('repModal').classList.contains('active')) {
+closeRepModal(repModalSaveRequested);
+repModalSaveRequested = false;
+return;
+}
+if (document.getElementById('confirmModal').classList.contains('active')) {
+closeConfirmModal();
+return;
+}
+if (document.getElementById('presetModal').classList.contains('active')) {
+closePresetModal();
+return;
+}
+if (document.getElementById('timerView').classList.contains('active')) {
+showPresetView();
+}
+});
+document.getElementById('playBtn').addEventListener('click', () => {
+if (timerState.isRunning) pauseTimer();
+else startTimer();
+});
+document.getElementById('resetBtn').addEventListener('click', resetTimer);
+document.getElementById('nextBtn').addEventListener('click', skipNext);
+document.getElementById('prevBtn').addEventListener('click', skipPrev);
+document.getElementById('exportBtn').addEventListener('click', exportData);
+document.getElementById('importBtn').addEventListener('click', () => {
+document.getElementById('importInput').click();
+});
+document.getElementById('importInput').addEventListener('change', importData);
+document.getElementById('volumeSlider').addEventListener('input', (e) => {
+appVolume = parseFloat(e.target.value);
+saveVolume();
+});
+document.getElementById('repOpenBtn').addEventListener('click', openRepModal);
+document.getElementById('repModalClose').addEventListener('click', () => history.back());
+document.getElementById('repModalSave').addEventListener('click', () => {
+repModalSaveRequested = true;
+history.back();
+});
+document.getElementById('repModal').addEventListener('click', (e) => {
+if (e.target.id === 'repModal') history.back();
+});
+loadPresets();
+loadVolume();
+renderPresets();
+setupNumberInputs();
+document.addEventListener('touchstart', function (event) {
+if (event.touches.length > 1) {
+event.preventDefault();
+}
+}, { passive: false });
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function (event) {
+if (event.target.closest('.num-btn')) return;
+const now = (new Date()).getTime();
+if (now - lastTouchEnd <= 300) {
+event.preventDefault();
+}
+lastTouchEnd = now;
+}, false);
+document.addEventListener('gesturestart', function (event) {
+event.preventDefault();
+});
+let wakeLock = null;
+async function requestWakeLock() {
+try {
+wakeLock = await navigator.wakeLock.request('screen');
+} catch (err) {
+console.log(`${err.name}, ${err.message}`);
+}
+}
+requestWakeLock();
+document.addEventListener('visibilitychange', async () => {
+if (wakeLock !== null && document.visibilityState === 'visible') {
+await requestWakeLock();
+}
+});
+</script>
+</body>
+</html>
