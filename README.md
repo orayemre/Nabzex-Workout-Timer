@@ -3,7 +3,9 @@
 Nabzex is a fast, lightweight, and offline-first web-based interval timer designed for workout routines, HIIT sessions, Tabata training, and round/rep tracking. Built as a standalone HTML5 application without heavy external dependencies.
 
 Live Demo:
-English: [ https://<kullanici-adi>.github.io/Nabzex-Workout-Timer/](https://orayemre.github.io/Nabzex-Workout-Timer/en/)
+
+English: [ https://<kullanici-adi>.github.io/Nabzex-Workout-Timer/en/](https://orayemre.github.io/Nabzex-Workout-Timer/en/)
+
 Turkish: [ https://<kullanici-adi>.github.io/Nabzex-Workout-Timer/](https://orayemre.github.io/Nabzex-Workout-Timer/)
 
 ## Key Features
