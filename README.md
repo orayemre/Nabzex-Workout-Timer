@@ -16,7 +16,6 @@ Turkish: [ https://<kullanici-adi>.github.io/Nabzex-Workout-Timer/](https://oray
 
 - Custom Preset Management: Create, edit, duplicate, and reorder workout presets. 
 - Round & Rep Tracking: Set unique target repetitions for every round.
-- Web Audio API Sound Alerts: Synthesized sound prompts without external audio assets.
 - Screen Wake Lock API: Keeps the device screen awake during workouts.
 - Data Portability: Export and import preset profiles via JSON backup files.
 - Mobile-First & Responsive: Smooth layout optimized for mobile viewports and touch interaction.
