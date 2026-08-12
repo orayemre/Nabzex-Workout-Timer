@@ -1,2 +1,32 @@
-# Nabzex-Workout-Timer
-Nabzex — Minimalist, offline-first HTML5 interval timer for workouts, HIIT, Tabata, and round tracking. Features Web Audio beeps &amp; Screen Wake Lock.
+# Nabzex — Offline Workout & Interval Timer
+
+Nabzex is a fast, lightweight, and offline-first web-based interval timer designed for workout routines, HIIT sessions, Tabata training, and round/rep tracking. Built as a standalone HTML5 application without heavy external dependencies.
+
+Live Demo: https://<kullanici-adi>.github.io/nabzex-workout-timer/
+
+## Key Features
+
+- Custom Preset Management: Create, edit, duplicate, and reorder workout presets.
+- Round & Rep Tracking: Set unique target repetitions for every round.
+- Web Audio API Sound Alerts: Synthesized sound prompts without external audio assets.
+- Screen Wake Lock API: Keeps the device screen awake during workouts.
+- Data Portability: Export and import preset profiles via JSON backup files.
+- Mobile-First & Responsive: Smooth layout optimized for mobile viewports and touch interaction.
+
+## Tech Stack
+
+- HTML5 / CSS3 (Custom CSS Variables, CSS Grid/Flexbox)
+- Vanilla JavaScript (ES6+)
+- Web Audio API (OscillatorNode & GainNode sound synthesis)
+- HTML5 Screen Wake Lock API
+- HTML5 LocalStorage API
+
+## Getting Started
+
+1. Clone or download the repository.
+2. Open `index.html` in any web browser.
+3. No build tools or package managers required.
+
+## License
+
+Distributed under the MIT License.
