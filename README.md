@@ -8,9 +8,13 @@ English: [ https://<kullanici-adi>.github.io/Nabzex-Workout-Timer/en/](https://o
 
 Turkish: [ https://<kullanici-adi>.github.io/Nabzex-Workout-Timer/](https://orayemre.github.io/Nabzex-Workout-Timer/)
 
-Mobil: ![Nabzex Workout Timer](nabzex.gif)
+## Mobile: 
 
-Desktop: ![Nabzex Workout Timer](nabzex.jpg)
+![Nabzex Workout Timer](nabzex.gif)
+
+## Desktop: 
+
+![Nabzex Workout Timer](nabzex.jpg)
 
 ## Key Features
 
