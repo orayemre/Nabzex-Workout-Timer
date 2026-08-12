@@ -8,7 +8,7 @@ English: [ https://<kullanici-adi>.github.io/Nabzex-Workout-Timer/en/](https://o
 
 Turkish: [ https://<kullanici-adi>.github.io/Nabzex-Workout-Timer/](https://orayemre.github.io/Nabzex-Workout-Timer/)
 
-![Nabzex Ekran Görüntüsü](/nabzex-image.jpg)
+![Nabzex Ekran Görüntüsü](nabzex-image.jpg)
 
 ## Key Features
 
