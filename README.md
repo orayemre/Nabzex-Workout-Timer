@@ -16,9 +16,7 @@ Live Demo:[ https://<kullanici-adi>.github.io/Nabzex-Workout-Timer/](https://ora
 ## Tech Stack
 
 - HTML5 / CSS3 (Custom CSS Variables, CSS Grid/Flexbox)
-- Vanilla JavaScript (ES6+)
-- Web Audio API (OscillatorNode & GainNode sound synthesis)
-- HTML5 Screen Wake Lock API
+- Pure JavaScript
 - HTML5 LocalStorage API
 
 ## Getting Started
