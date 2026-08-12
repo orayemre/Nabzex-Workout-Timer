@@ -1,4 +1,4 @@
-# Nabzex — Offline Workout & Interval Timer
+# Nabzex - Offline Workout & Interval Timer
 
 Nabzex is a fast, lightweight, and offline-first web-based interval timer designed for workout routines, HIIT sessions, Tabata training, and round/rep tracking. Built as a standalone HTML5 application without heavy external dependencies.
 
