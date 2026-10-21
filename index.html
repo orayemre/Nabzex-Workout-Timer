@@ -349,16 +349,23 @@ TEKRAR EKLE
 </div>
 </div>
 </div>
-<div class="toast" id="toast"></div>
-  <button id="btn">Başlat</button>
+<button id="btna" class="btn btn-primary">Başlat</button>
 <script>
   const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
   recognition.lang = 'tr-TR';
   recognition.onresult = (e) => {
-    if (e.results[0][0].transcript.includes('merhaba')) alert('Sesli komut algılandı!');
+    const gelenSes = e.results[0][0].transcript.toLocaleLowerCase('tr-TR');
+    console.log("Algılanan Ses:", gelenSes); 
+    if (gelenSes.includes('merhaba')) {
+      alert('Sesli komut algılandı!');
+    }
   };
-  document.getElementById('btn').onclick = () => recognition.start();
+  document.getElementById('btna').onclick = () => {
+    recognition.start();
+    console.log("Dinleme başladı...");
+  };
 </script>
+
 <script>
 let presets = [];
 let editingPresetId = null;
