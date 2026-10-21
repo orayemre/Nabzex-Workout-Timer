@@ -1003,14 +1003,15 @@ let yenidenDinlemeZamanlayici = null;
 let sesliDestekUyarisiGosterildi = false;
 
 function sesliMetniTemizle(metin) {
+const harf = {"İ":"i","I":"i","ı":"i","Ş":"s","ş":"s","Ğ":"g","ğ":"g","Ç":"c","ç":"c","Ö":"o","ö":"o","Ü":"u","ü":"u","Â":"a","â":"a","Î":"i","î":"i","Û":"u","û":"u"};
 return String(metin)
-.toLocaleLowerCase('tr-TR')
-.replace(/ı/g, 'i')
+.replace(/[İIıŞşĞğÇçÖöÜüÂâÎîÛû]/g, c => harf[c])
+.toLowerCase()
 .normalize('NFD')
 .replace(/[\u0300-\u036f]/g, '')
-.replace(/[^a-z0-9\s]/g, ' ')
-.replace(/\s+/g, ' ')
-.trim();
+.replace(/[^a-z0-9]+/g, ' ')
+.trim()
+.replace(/\s+/g, ' ');
 }
 
 function sesliKomutCalistir(komut) {
