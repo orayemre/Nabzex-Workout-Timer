@@ -349,52 +349,6 @@ TEKRAR EKLE
 </div>
 </div>
 </div>
-<button id="btna" class="btn btn-primary">Başlat</button>
-<script>
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-  if (!SR) {
-    alert('Hata: Bu tarayıcı SpeechRecognition API desteklemiyor. Chrome veya Edge kullanın.');
-  } else {
-    const recognition = new SR();
-    recognition.lang = 'tr-TR';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    recognition.onresult = (e) => {
-      const gelenSes = e.results[0][0].transcript.toLocaleLowerCase('tr-TR');
-      console.log("Algılanan Ses:", gelenSes);
-      if (gelenSes.includes('merhaba')) {
-        alert('Sesli komut algılandı!');
-      } else {
-        alert('Algılandı ama eşleşmedi: ' + gelenSes);
-      }
-    };
-
-    recognition.onerror = (e) => {
-      alert('Hata kodu: ' + e.error + '\nMesaj: ' + (e.message || 'yok'));
-      console.error('SpeechRecognition hatası:', e);
-    };
-
-    recognition.onnomatch = () => {
-      alert('Konuşma anlaşılamadı (nomatch).');
-    };
-
-    recognition.onend = () => {
-      console.log('Dinleme bitti.');
-    };
-
-    document.getElementById('btna').onclick = () => {
-      try {
-        recognition.start();
-        console.log("Dinleme başladı...");
-      } catch (err) {
-        alert('start() hatası: ' + err.message);
-      }
-    };
-  }
-</script>
-
 <script>
 let presets = [];
 let editingPresetId = null;
