@@ -1000,7 +1000,10 @@ const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechReco
 let sesliKomutAktif = false;
 let sesTanima = null;
 let yenidenDinlemeZamanlayici = null;
-let sesliDestekUyarisiGosterildi = false;
+let sesTanimaBaslatiliyor = false;
+let sesTanimaCalisiyor = false;
+let sesTanimaHataIzin = false;
+let sonKomutZamani = 0;
 
 function sesliMetniTemizle(metin) {
 const harf = {"İ":"i","I":"i","ı":"i","Ş":"s","ş":"s","Ğ":"g","ğ":"g","Ç":"c","ç":"c","Ö":"o","ö":"o","Ü":"u","ü":"u","Â":"a","â":"a","Î":"i","î":"i","Û":"u","û":"u"};
@@ -1014,103 +1017,107 @@ return String(metin)
 .replace(/\s+/g, ' ');
 }
 
-function sesliKomutCalistir(komut) {
-if (!document.getElementById('timerView').classList.contains('active')) return;
-if (komut === 'başlat' && !timerState.isRunning) {
-document.getElementById('playBtn').click();
-} else if (komut === 'durdur' && timerState.isRunning) {
-document.getElementById('playBtn').click();
-} else if (komut === 'sonraki') {
-document.getElementById('nextBtn').click();
-} else if (komut === 'önceki') {
-document.getElementById('prevBtn').click();
-}
-}
-
-function sesTanimaBaslat() {
-if (!sesliKomutAktif || !SpeechRecognitionAPI || sesTanima) return;
-const tanima = new SpeechRecognitionAPI();
-sesTanima = tanima;
-tanima.lang = 'tr-TR';
-tanima.continuous = true;
-tanima.interimResults = false;
-tanima.maxAlternatives = 3;
-
-tanima.onresult = event => {
-for (let i = event.resultIndex; i < event.results.length; i++) {
-const sonuc = event.results[i];
-if (!sonuc.isFinal) continue;
-for (let j = 0; j < sonuc.length; j++) {
-const kelimeler = sesliMetniTemizle(sonuc[j].transcript).split(' ');
-const komut = ['başlat', 'durdur', 'sonraki', 'önceki'].find(k => kelimeler.includes(k));
-if (komut) {
-sesliKomutCalistir(komut);
+function sesliKomutuUygula(metin) {
+const temiz = sesliMetniTemizle(metin);
+const simdi = Date.now();
+if (!temiz || simdi - sonKomutZamani < 700) return;
+const kelimeler = temiz.split(' ');
+if (kelimeler.some(k => ['baslat', 'basla', 'baslatma'].includes(k))) {
+sonKomutZamani = simdi;
+if (!timerState.isRunning) startTimer();
 return;
 }
+if (kelimeler.some(k => ['durdur', 'dur', 'beklet', 'duraklat'].includes(k))) {
+sonKomutZamani = simdi;
+if (timerState.isRunning) pauseTimer();
+return;
+}
+if (kelimeler.some(k => ['sonraki', 'ileri', 'atla'].includes(k))) {
+sonKomutZamani = simdi;
+skipNext();
+return;
+}
+if (kelimeler.some(k => ['onceki', 'geri'].includes(k))) {
+sonKomutZamani = simdi;
+skipPrev();
 }
 }
-};
 
-tanima.onerror = event => {
-if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-sesliKomutAktif = false;
-clearTimeout(yenidenDinlemeZamanlayici);
-showToast('Mikrofon izni verilmedi. Tarayıcı ayarlarından mikrofon iznini açabilirsiniz.');
-} else if (event.error === 'audio-capture') {
-showToast('Mikrofon bulunamadı veya kullanılamıyor.');
-}
-};
-
-tanima.onend = () => {
-if (sesTanima === tanima) sesTanima = null;
-if (sesliKomutAktif && document.getElementById('timerView').classList.contains('active')) {
-clearTimeout(yenidenDinlemeZamanlayici);
-yenidenDinlemeZamanlayici = setTimeout(sesTanimaBaslat, 350);
-}
-};
-
-try {
-tanima.start();
-} catch (error) {
-if (sesTanima === tanima) sesTanima = null;
-if (sesliKomutAktif) {
-clearTimeout(yenidenDinlemeZamanlayici);
-yenidenDinlemeZamanlayici = setTimeout(sesTanimaBaslat, 700);
-}
-}
+function sesliTanimaZamanla() {
+if (!sesliKomutAktif || sesTanimaHataIzin || !sesTanima || yenidenDinlemeZamanlayici) return;
+ yenidenDinlemeZamanlayici = setTimeout(() => {
+ yenidenDinlemeZamanlayici = null;
+ if (!sesliKomutAktif || sesTanimaHataIzin || sesTanimaBaslatiliyor || sesTanimaCalisiyor) return;
+ try {
+ sesTanimaBaslatiliyor = true;
+ sesTanima.start();
+ } catch (e) {
+ sesTanimaBaslatiliyor = false;
+ if (e.name !== 'InvalidStateError') sesTanimaZamanla();
+ }
+ }, 700);
 }
 
 function sesliKomutlariEtkinlestir() {
-if (!SpeechRecognitionAPI) {
-if (!sesliDestekUyarisiGosterildi) {
-showToast('Bu tarayıcı sesli komutları desteklemiyor. Zamanlayıcıyı normal kullanabilirsiniz.');
-sesliDestekUyarisiGosterildi = true;
-}
-return;
-}
-if (sesliKomutAktif) return;
+if (!SpeechRecognitionAPI) return;
 sesliKomutAktif = true;
-sesTanimaBaslat();
+sesTanimaHataIzin = false;
+if (!sesTanima) {
+sesTanima = new SpeechRecognitionAPI();
+sesTanima.lang = 'tr-TR';
+sesTanima.continuous = true;
+sesTanima.interimResults = false;
+sesTanima.maxAlternatives = 1;
+sesTanima.onstart = () => {
+sesTanimaBaslatiliyor = false;
+sesTanimaCalisiyor = true;
+};
+sesTanima.onresult = event => {
+for (let i = event.resultIndex; i < event.results.length; i++) {
+if (event.results[i].isFinal) sesliKomutuUygula(event.results[i][0].transcript);
+}
+};
+sesTanima.onerror = event => {
+sesTanimaBaslatiliyor = false;
+sesTanimaCalisiyor = false;
+if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+sesTanimaHataIzin = true;
+}
+};
+sesTanima.onend = () => {
+sesTanimaBaslatiliyor = false;
+sesTanimaCalisiyor = false;
+sesliTanimaZamanla();
+};
+}
+sesliTanimaZamanla();
 }
 
 function sesliKomutlariDurdur() {
 sesliKomutAktif = false;
+if (yenidenDinlemeZamanlayici) {
 clearTimeout(yenidenDinlemeZamanlayici);
+ yenidenDinlemeZamanlayici = null;
+}
 if (sesTanima) {
-const tanima = sesTanima;
-sesTanima = null;
-try {
-tanima.abort();
-} catch (error) {}
+try { sesTanima.stop(); } catch (e) {}
 }
 }
 
+ document.addEventListener('visibilitychange', () => {
+if (document.visibilityState === 'visible' && sesliKomutAktif) {
+sesTanimaBaslatiliyor = false;
+sesTanimaCalisiyor = false;
+sesliTanimaZamanla();
+}
+});
+
 function showTimerView() {
+sesliKomutlariEtkinlestir();
 document.querySelector('.header').style.display = 'none';
 document.getElementById('presetView').style.display = 'none';
 document.getElementById('timerView').classList.add('active');
 history.pushState({view: 'timer'}, '', location.href);
-sesliKomutlariEtkinlestir();
 }
 function showPresetView() {
 sesliKomutlariDurdur();
