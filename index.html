@@ -1004,6 +1004,7 @@ let sesTanimaBaslatiliyor = false;
 let sesTanimaCalisiyor = false;
 let sesTanimaHataIzin = false;
 let sonKomutZamani = 0;
+let sonKomutTuru = '';
 let sesTanimaOturumu = 0;
 
 function sesliMetniTemizle(metin) {
@@ -1023,52 +1024,80 @@ const temiz = sesliMetniTemizle(metin);
 const simdi = Date.now();
 if (!temiz) return;
 const kelimeler = temiz.split(' ');
-if (kelimeler.some(k => ['baslat', 'basla', 'baslatma'].includes(k))) {
-if (simdi - sonKomutZamani < 350) return;
+let komut = '';
+if (kelimeler.some(k => ['baslat', 'basla', 'baslatma'].includes(k))) komut = 'baslat';
+else if (kelimeler.some(k => ['durdur', 'dur', 'beklet', 'duraklat'].includes(k))) komut = 'durdur';
+else if (kelimeler.some(k => ['sonraki', 'ileri', 'atla'].includes(k))) komut = 'sonraki';
+else if (kelimeler.some(k => ['onceki', 'geri'].includes(k))) komut = 'onceki';
+if (!komut) return;
+if (komut === sonKomutTuru && simdi - sonKomutZamani < 650) return;
+sonKomutTuru = komut;
 sonKomutZamani = simdi;
+if (komut === 'baslat') {
 if (!timerState.isRunning) startTimer();
-return;
-}
-if (kelimeler.some(k => ['durdur', 'dur', 'beklet', 'duraklat'].includes(k))) {
-if (simdi - sonKomutZamani < 350) return;
-sonKomutZamani = simdi;
+} else if (komut === 'durdur') {
 if (timerState.isRunning) pauseTimer();
-return;
-}
-if (kelimeler.some(k => ['sonraki', 'ileri', 'atla'].includes(k))) {
-if (simdi - sonKomutZamani < 350) return;
-sonKomutZamani = simdi;
+} else if (komut === 'sonraki') {
 skipNext();
-return;
-}
-if (kelimeler.some(k => ['onceki', 'geri'].includes(k))) {
-if (simdi - sonKomutZamani < 350) return;
-sonKomutZamani = simdi;
+} else if (komut === 'onceki') {
 skipPrev();
 }
 }
 
-function sesliTanimaZamanla(oturum) {
-if (!sesliKomutAktif || sesTanimaHataIzin || !sesTanima || yenidenDinlemeZamanlayici) return;
- yenidenDinlemeZamanlayici = setTimeout(() => {
+function sesliTanimaZamanla(oturum, gecikme = 450) {
+if (!sesliKomutAktif || sesTanimaHataIzin || yenidenDinlemeZamanlayici) return;
+yenidenDinlemeZamanlayici = setTimeout(() => {
  yenidenDinlemeZamanlayici = null;
- if (!sesliKomutAktif || oturum !== sesTanimaOturumu || sesTanimaHataIzin || sesTanimaBaslatiliyor || sesTanimaCalisiyor || !sesTanima) return;
+ if (!sesliKomutAktif || oturum !== sesTanimaOturumu || sesTanimaHataIzin || sesTanimaBaslatiliyor || sesTanimaCalisiyor) return;
+ if (!SpeechRecognitionAPI) return;
+ const tanima = new SpeechRecognitionAPI();
+ sesTanima = tanima;
+ tanima.lang = 'tr-TR';
+ tanima.continuous = true;
+ tanima.interimResults = false;
+ tanima.maxAlternatives = 3;
+ tanima.onstart = () => {
+ if (oturum !== sesTanimaOturumu || tanima !== sesTanima) return;
+ sesTanimaBaslatiliyor = false;
+ sesTanimaCalisiyor = true;
+ };
+ tanima.onresult = event => {
+ if (oturum !== sesTanimaOturumu || tanima !== sesTanima) return;
+ for (let i = event.resultIndex; i < event.results.length; i++) {
+ if (event.results[i].isFinal && event.results[i][0]) sesliKomutuUygula(event.results[i][0].transcript);
+ }
+ };
+ tanima.onerror = event => {
+ if (oturum !== sesTanimaOturumu || tanima !== sesTanima) return;
+ sesTanimaBaslatiliyor = false;
+ sesTanimaCalisiyor = false;
+ if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+ sesTanimaHataIzin = true;
+ }
+ };
+ tanima.onend = () => {
+ if (oturum !== sesTanimaOturumu || tanima !== sesTanima) return;
+ sesTanimaBaslatiliyor = false;
+ sesTanimaCalisiyor = false;
+ sesTanima = null;
+ if (sesliKomutAktif && !sesTanimaHataIzin) sesliTanimaZamanla(oturum, 300);
+ };
  try {
  sesTanimaBaslatiliyor = true;
- sesTanima.start();
+ tanima.start();
  } catch (e) {
  sesTanimaBaslatiliyor = false;
- if (e.name !== 'InvalidStateError') sesliTanimaZamanla(oturum);
+ sesTanimaCalisiyor = false;
+ sesTanima = null;
+ if (e.name === 'InvalidStateError') sesliTanimaZamanla(oturum, 700);
+ else if (sesliKomutAktif && !sesTanimaHataIzin) sesliTanimaZamanla(oturum, 1200);
  }
- }, 500);
+}, gecikme);
 }
 
 function sesliKomutlariEtkinlestir() {
 if (!SpeechRecognitionAPI) return;
-if (sesliKomutAktif && sesTanima) {
-sesliTanimaZamanla(sesTanimaOturumu);
-return;
-}
+if (sesliKomutAktif && (sesTanima || yenidenDinlemeZamanlayici)) return;
 sesliKomutAktif = true;
 sesTanimaHataIzin = false;
 sesTanimaBaslatiliyor = false;
@@ -1081,42 +1110,13 @@ clearTimeout(yenidenDinlemeZamanlayici);
 }
 if (sesTanima) {
 const eskiTanima = sesTanima;
+sesTanima = null;
 eskiTanima.onend = null;
 eskiTanima.onerror = null;
 eskiTanima.onresult = null;
-try { eskiTanima.abort(); } catch (e) {}
+try { eskiTanima.abort(); } catch (e) { try { eskiTanima.stop(); } catch (err) {} }
 }
-sesTanima = new SpeechRecognitionAPI();
-sesTanima.lang = 'tr-TR';
-sesTanima.continuous = true;
-sesTanima.interimResults = false;
-sesTanima.maxAlternatives = 1;
-sesTanima.onstart = () => {
-if (oturum !== sesTanimaOturumu) return;
-sesTanimaBaslatiliyor = false;
-sesTanimaCalisiyor = true;
-};
-sesTanima.onresult = event => {
-if (oturum !== sesTanimaOturumu) return;
-for (let i = event.resultIndex; i < event.results.length; i++) {
-if (event.results[i].isFinal) sesliKomutuUygula(event.results[i][0].transcript);
-}
-};
-sesTanima.onerror = event => {
-if (oturum !== sesTanimaOturumu) return;
-sesTanimaBaslatiliyor = false;
-sesTanimaCalisiyor = false;
-if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-sesTanimaHataIzin = true;
-}
-};
-sesTanima.onend = () => {
-if (oturum !== sesTanimaOturumu) return;
-sesTanimaBaslatiliyor = false;
-sesTanimaCalisiyor = false;
-sesliTanimaZamanla(oturum);
-};
-sesliTanimaZamanla(oturum);
+sesliTanimaZamanla(oturum, 150);
 }
 
 function sesliKomutlariDurdur() {
@@ -1142,7 +1142,20 @@ document.addEventListener('visibilitychange', () => {
 if (document.visibilityState === 'visible' && sesliKomutAktif) {
 sesTanimaBaslatiliyor = false;
 sesTanimaCalisiyor = false;
-sesliTanimaZamanla(sesTanimaOturumu);
+if (sesTanima) {
+const eskiTanima = sesTanima;
+sesTanima = null;
+eskiTanima.onend = null;
+eskiTanima.onerror = null;
+eskiTanima.onresult = null;
+try { eskiTanima.abort(); } catch (e) {}
+}
+sesTanimaOturumu++;
+if (yenidenDinlemeZamanlayici) {
+clearTimeout(yenidenDinlemeZamanlayici);
+ yenidenDinlemeZamanlayici = null;
+}
+sesliTanimaZamanla(sesTanimaOturumu, 350);
 }
 });
 
