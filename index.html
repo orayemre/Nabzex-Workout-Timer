@@ -974,6 +974,7 @@ document.getElementById('timerTitle').textContent = p.name;
 renderConfigSummary();
 showTimerView();
 resetTimer();
+sesAyarla(true);
 }
 function renderConfigSummary() {
 const c = timerState.config;
@@ -1003,6 +1004,7 @@ document.getElementById('timerView').classList.add('active');
 history.pushState({view: 'timer'}, '', location.href);
 }
 function showPresetView() {
+sesAyarla(false);
 pauseTimer();
 document.querySelector('.header').style.display = 'flex';
 document.getElementById('timerView').classList.remove('active');
@@ -1353,6 +1355,64 @@ history.back();
 document.getElementById('repModal').addEventListener('click', (e) => {
 if (e.target.id === 'repModal') history.back();
 });
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition
+let voiceOn=false
+let voiceRec=null
+const trHarf={"İ":"i","I":"i","ı":"i","Ş":"s","ş":"s","Ğ":"g","ğ":"g","Ç":"c","ç":"c","Ö":"o","ö":"o","Ü":"u","ü":"u","Â":"a","â":"a","Î":"i","î":"i","Û":"u","û":"u"}
+const sesTemiz=t=>t.replace(/[İIıŞşĞğÇçÖöÜüÂâÎîÛû]/g,c=>trHarf[c]).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"")
+const komutlar=[
+["durdur",()=>{if(timerState.isRunning)document.getElementById("playBtn").click()}],
+["baslat",()=>{if(!timerState.isRunning)document.getElementById("playBtn").click()}],
+["sonraki",()=>document.getElementById("nextBtn").click()],
+["onceki",()=>document.getElementById("prevBtn").click()]
+]
+function komutBul(res){
+for(let j=0;j<res.length;j++){
+const t=sesTemiz(res[j].transcript)
+for(const k of komutlar){
+if(t.includes(k[0]))return k[1]
+}
+}
+return null
+}
+function sesBaslat(){
+if(!voiceOn||!SR)return
+const r=new SR
+voiceRec=r
+r.lang="tr-TR"
+r.continuous=true
+r.interimResults=true
+r.maxAlternatives=5
+r.onresult=e=>{
+for(let i=e.resultIndex;i<e.results.length;i++){
+const fn=komutBul(e.results[i])
+if(fn){
+r.onresult=null
+r.abort()
+fn()
+return
+}
+}
+}
+r.onerror=e=>{
+if(e.error==="not-allowed"||e.error==="service-not-allowed")voiceOn=false
+}
+r.onend=()=>{
+if(voiceOn&&voiceRec===r)setTimeout(sesBaslat,100)
+}
+try{r.start()}catch(x){}
+}
+function sesAyarla(on){
+voiceOn=on
+if(on){
+if(!voiceRec)sesBaslat()
+}else if(voiceRec){
+const r=voiceRec
+voiceRec=null
+r.onend=null
+r.abort()
+}
+}
 loadPresets();
 loadVolume();
 renderPresets();
