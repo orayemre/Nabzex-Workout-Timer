@@ -974,7 +974,6 @@ document.getElementById('timerTitle').textContent = p.name;
 renderConfigSummary();
 showTimerView();
 resetTimer();
-sesAyarla(true);
 }
 function renderConfigSummary() {
 const c = timerState.config;
@@ -997,14 +996,124 @@ document.getElementById('configSummary').innerHTML = `
 </div>
 `;
 }
+const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+let sesliKomutAktif = false;
+let sesTanima = null;
+let yenidenDinlemeZamanlayici = null;
+let sesliDestekUyarisiGosterildi = false;
+
+function sesliMetniTemizle(metin) {
+const harf = {"İ":"i","I":"i","ı":"i","Ş":"s","ş":"s","Ğ":"g","ğ":"g","Ç":"c","ç":"c","Ö":"o","ö":"o","Ü":"u","ü":"u","Â":"a","â":"a","Î":"i","î":"i","Û":"u","û":"u"};
+return String(metin)
+.replace(/[İIıŞşĞğÇçÖöÜüÂâÎîÛû]/g, c => harf[c])
+.toLowerCase()
+.normalize('NFD')
+.replace(/[\u0300-\u036f]/g, '')
+.replace(/[^a-z0-9]+/g, ' ')
+.trim()
+.replace(/\s+/g, ' ');
+}
+
+function sesliKomutCalistir(komut) {
+if (!document.getElementById('timerView').classList.contains('active')) return;
+if (komut === 'başlat' && !timerState.isRunning) {
+document.getElementById('playBtn').click();
+} else if (komut === 'durdur' && timerState.isRunning) {
+document.getElementById('playBtn').click();
+} else if (komut === 'sonraki') {
+document.getElementById('nextBtn').click();
+} else if (komut === 'önceki') {
+document.getElementById('prevBtn').click();
+}
+}
+
+function sesTanimaBaslat() {
+if (!sesliKomutAktif || !SpeechRecognitionAPI || sesTanima) return;
+const tanima = new SpeechRecognitionAPI();
+sesTanima = tanima;
+tanima.lang = 'tr-TR';
+tanima.continuous = true;
+tanima.interimResults = false;
+tanima.maxAlternatives = 3;
+
+tanima.onresult = event => {
+for (let i = event.resultIndex; i < event.results.length; i++) {
+const sonuc = event.results[i];
+if (!sonuc.isFinal) continue;
+for (let j = 0; j < sonuc.length; j++) {
+const kelimeler = sesliMetniTemizle(sonuc[j].transcript).split(' ');
+const komut = ['başlat', 'durdur', 'sonraki', 'önceki'].find(k => kelimeler.includes(k));
+if (komut) {
+sesliKomutCalistir(komut);
+return;
+}
+}
+}
+};
+
+tanima.onerror = event => {
+if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+sesliKomutAktif = false;
+clearTimeout(yenidenDinlemeZamanlayici);
+showToast('Mikrofon izni verilmedi. Tarayıcı ayarlarından mikrofon iznini açabilirsiniz.');
+} else if (event.error === 'audio-capture') {
+showToast('Mikrofon bulunamadı veya kullanılamıyor.');
+}
+};
+
+tanima.onend = () => {
+if (sesTanima === tanima) sesTanima = null;
+if (sesliKomutAktif && document.getElementById('timerView').classList.contains('active')) {
+clearTimeout(yenidenDinlemeZamanlayici);
+yenidenDinlemeZamanlayici = setTimeout(sesTanimaBaslat, 350);
+}
+};
+
+try {
+tanima.start();
+} catch (error) {
+if (sesTanima === tanima) sesTanima = null;
+if (sesliKomutAktif) {
+clearTimeout(yenidenDinlemeZamanlayici);
+yenidenDinlemeZamanlayici = setTimeout(sesTanimaBaslat, 700);
+}
+}
+}
+
+function sesliKomutlariEtkinlestir() {
+if (!SpeechRecognitionAPI) {
+if (!sesliDestekUyarisiGosterildi) {
+showToast('Bu tarayıcı sesli komutları desteklemiyor. Zamanlayıcıyı normal kullanabilirsiniz.');
+sesliDestekUyarisiGosterildi = true;
+}
+return;
+}
+if (sesliKomutAktif) return;
+sesliKomutAktif = true;
+sesTanimaBaslat();
+}
+
+function sesliKomutlariDurdur() {
+sesliKomutAktif = false;
+clearTimeout(yenidenDinlemeZamanlayici);
+if (sesTanima) {
+const tanima = sesTanima;
+sesTanima = null;
+try {
+tanima.abort();
+} catch (error) {}
+}
+}
+
 function showTimerView() {
 document.querySelector('.header').style.display = 'none';
 document.getElementById('presetView').style.display = 'none';
 document.getElementById('timerView').classList.add('active');
 history.pushState({view: 'timer'}, '', location.href);
+sesliKomutlariEtkinlestir();
 }
 function showPresetView() {
-sesAyarla(false);
+sesliKomutlariDurdur();
 pauseTimer();
 document.querySelector('.header').style.display = 'flex';
 document.getElementById('timerView').classList.remove('active');
@@ -1355,64 +1464,6 @@ history.back();
 document.getElementById('repModal').addEventListener('click', (e) => {
 if (e.target.id === 'repModal') history.back();
 });
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition
-let voiceOn=false
-let voiceRec=null
-const trHarf={"İ":"i","I":"i","ı":"i","Ş":"s","ş":"s","Ğ":"g","ğ":"g","Ç":"c","ç":"c","Ö":"o","ö":"o","Ü":"u","ü":"u","Â":"a","â":"a","Î":"i","î":"i","Û":"u","û":"u"}
-const sesTemiz=t=>t.replace(/[İIıŞşĞğÇçÖöÜüÂâÎîÛû]/g,c=>trHarf[c]).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"")
-const komutlar=[
-["durdur",()=>{if(timerState.isRunning)document.getElementById("playBtn").click()}],
-["baslat",()=>{if(!timerState.isRunning)document.getElementById("playBtn").click()}],
-["sonraki",()=>document.getElementById("nextBtn").click()],
-["onceki",()=>document.getElementById("prevBtn").click()]
-]
-function komutBul(res){
-for(let j=0;j<res.length;j++){
-const t=sesTemiz(res[j].transcript)
-for(const k of komutlar){
-if(t.includes(k[0]))return k[1]
-}
-}
-return null
-}
-function sesBaslat(){
-if(!voiceOn||!SR)return
-const r=new SR
-voiceRec=r
-r.lang="tr-TR"
-r.continuous=true
-r.interimResults=true
-r.maxAlternatives=5
-r.onresult=e=>{
-for(let i=e.resultIndex;i<e.results.length;i++){
-const fn=komutBul(e.results[i])
-if(fn){
-r.onresult=null
-r.abort()
-fn()
-return
-}
-}
-}
-r.onerror=e=>{
-if(e.error==="not-allowed"||e.error==="service-not-allowed")voiceOn=false
-}
-r.onend=()=>{
-if(voiceOn&&voiceRec===r)setTimeout(sesBaslat,100)
-}
-try{r.start()}catch(x){}
-}
-function sesAyarla(on){
-voiceOn=on
-if(on){
-if(!voiceRec)sesBaslat()
-}else if(voiceRec){
-const r=voiceRec
-voiceRec=null
-r.onend=null
-r.abort()
-}
-}
 loadPresets();
 loadVolume();
 renderPresets();
