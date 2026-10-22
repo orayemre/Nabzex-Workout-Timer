@@ -1003,8 +1003,6 @@ let yenidenDinlemeZamanlayici = null;
 let sesTanimaBaslatiliyor = false;
 let sesTanimaCalisiyor = false;
 let sesTanimaHataIzin = false;
-let sonKomutZamani = 0;
-let sonKomutTuru = '';
 let sesTanimaOturumu = 0;
 
 function sesliMetniTemizle(metin) {
@@ -1021,7 +1019,6 @@ return String(metin)
 
 function sesliKomutuUygula(metin) {
 const temiz = sesliMetniTemizle(metin);
-const simdi = Date.now();
 if (!temiz) return;
 const kelimeler = temiz.split(' ');
 let komut = '';
@@ -1030,9 +1027,6 @@ else if (kelimeler.some(k => ['durdur', 'dur', 'beklet', 'duraklat'].includes(k)
 else if (kelimeler.some(k => ['sonraki', 'ileri', 'atla'].includes(k))) komut = 'sonraki';
 else if (kelimeler.some(k => ['onceki', 'geri'].includes(k))) komut = 'onceki';
 if (!komut) return;
-if (komut === sonKomutTuru && simdi - sonKomutZamani < 650) return;
-sonKomutTuru = komut;
-sonKomutZamani = simdi;
 if (komut === 'baslat') {
 if (!timerState.isRunning) startTimer();
 } else if (komut === 'durdur') {
