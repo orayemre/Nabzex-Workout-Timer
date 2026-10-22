@@ -1068,7 +1068,7 @@ sesTanimaCalisiyor = true;
 tanima.onresult = event => {
 if (oturum !== sesTanimaOturumu || tanima !== sesTanima) return;
 for (let i = event.resultIndex; i < event.results.length; i++) {
-if (event.results[i].isFinal && event.results[i][0]) sesliKomutuUygula(event.results[i][0].transcript);
+if (event.results[i][0]) sesliKomutuUygula(event.results[i][0].transcript);
 }
 };
 tanima.onerror = event => {
