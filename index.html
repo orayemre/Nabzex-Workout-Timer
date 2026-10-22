@@ -1371,6 +1371,81 @@ if (wakeLock !== null && document.visibilityState === 'visible') {
 await requestWakeLock();
 }
 });
+
+const SesTanima=window.SpeechRecognition||window.webkitSpeechRecognition
+const sesHarf={"İ":"i","I":"i","ı":"i","Ş":"s","ş":"s","Ğ":"g","ğ":"g","Ç":"c","ç":"c","Ö":"o","ö":"o","Ü":"u","ü":"u","Â":"a","â":"a","Î":"i","î":"i","Û":"u","û":"u"}
+const sesTemiz=t=>t.replace(/[İIıŞşĞğÇçÖöÜüÂâÎîÛû]/g,c=>sesHarf[c]).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"")
+let sesAktif=false
+let sesNesne=null
+function sesKomutBul(t){
+if(t.includes("sonraki"))return "next"
+if(t.includes("onceki"))return "prev"
+if(t.includes("durdur")||t.includes("duraklat")||t==="dur")return "stop"
+if(t.includes("basla"))return "start"
+return null
+}
+function sesKomutUygula(k){
+if(!document.getElementById("timerView").classList.contains("active"))return
+if(k==="start"){
+if(!timerState.isRunning)document.getElementById("playBtn").click()
+}else if(k==="stop"){
+if(timerState.isRunning)document.getElementById("playBtn").click()
+}else if(k==="next"){
+document.getElementById("nextBtn").click()
+}else if(k==="prev"){
+document.getElementById("prevBtn").click()
+}
+}
+function sesBaslat(){
+if(!SesTanima||!sesAktif||sesNesne)return
+const r=new SesTanima
+let islendi=false
+r.lang="tr-TR"
+r.continuous=true
+r.interimResults=true
+r.maxAlternatives=5
+r.onresult=e=>{
+if(islendi)return
+for(let i=e.resultIndex;i<e.results.length;i++){
+for(let j=0;j<e.results[i].length;j++){
+const k=sesKomutBul(sesTemiz(e.results[i][j].transcript))
+if(k){
+islendi=true
+sesKomutUygula(k)
+r.abort()
+return
+}
+}
+}
+}
+r.onerror=e=>{
+if(e.error==="not-allowed"||e.error==="service-not-allowed")sesAktif=false
+}
+r.onend=()=>{
+sesNesne=null
+if(sesAktif)setTimeout(sesBaslat,200)
+}
+sesNesne=r
+try{r.start()}catch(x){sesNesne=null}
+}
+function sesDurdur(){
+sesAktif=false
+if(sesNesne){
+try{sesNesne.abort()}catch(x){}
+}
+}
+const sesEskiTimerGoster=showTimerView
+showTimerView=function(){
+sesEskiTimerGoster()
+sesAktif=true
+sesBaslat()
+}
+const sesEskiPresetGoster=showPresetView
+showPresetView=function(){
+sesEskiPresetGoster()
+sesDurdur()
+}
+document.addEventListener("pointerdown",()=>initAudio(),{once:true})
 </script>
 </body>
 </html>
