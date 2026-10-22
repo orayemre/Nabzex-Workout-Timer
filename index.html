@@ -1021,7 +1021,6 @@ return String(metin)
 
 function sesliKomutuUygula(metin) {
 const temiz = sesliMetniTemizle(metin);
-const simdi = Date.now();
 if (!temiz) return;
 const kelimeler = temiz.split(' ');
 let komut = '';
@@ -1030,9 +1029,6 @@ else if (kelimeler.some(k => ['durdur', 'dur', 'beklet', 'duraklat'].includes(k)
 else if (kelimeler.some(k => ['sonraki', 'ileri', 'atla'].includes(k))) komut = 'sonraki';
 else if (kelimeler.some(k => ['onceki', 'geri'].includes(k))) komut = 'onceki';
 if (!komut) return;
-if (komut === sonKomutTuru && simdi - sonKomutZamani < 650) return;
-sonKomutTuru = komut;
-sonKomutZamani = simdi;
 if (komut === 'baslat') {
 if (!timerState.isRunning) startTimer();
 } else if (komut === 'durdur') {
@@ -1043,13 +1039,21 @@ skipNext();
 skipPrev();
 }
 }
-
 function sesliTanimaZamanla(oturum, gecikme = 450) {
 if (!sesliKomutAktif || sesTanimaHataIzin || yenidenDinlemeZamanlayici) return;
 yenidenDinlemeZamanlayici = setTimeout(() => {
 yenidenDinlemeZamanlayici = null;
-if (!sesliKomutAktif || oturum !== sesTanimaOturumu || sesTanimaHataIzin || sesTanimaBaslatiliyor || sesTanimaCalisiyor) return;
+if (!sesliKomutAktif || oturum !== sesTanimaOturumu || sesTanimaHataIzin || sesTanimaBaslatiliyor) return;
 if (!SpeechRecognitionAPI) return;
+if (sesTanima && !sesTanimaCalisiyor) {
+try {
+sesTanimaBaslatiliyor = true;
+sesTanima.start();
+return;
+} catch (e) {
+sesTanima = null;
+}
+}
 const tanima = new SpeechRecognitionAPI();
 sesTanima = tanima;
 tanima.lang = 'tr-TR';
@@ -1079,8 +1083,7 @@ tanima.onend = () => {
 if (oturum !== sesTanimaOturumu || tanima !== sesTanima) return;
 sesTanimaBaslatiliyor = false;
 sesTanimaCalisiyor = false;
-sesTanima = null;
-if (sesliKomutAktif && !sesTanimaHataIzin) sesliTanimaZamanla(oturum, 300);
+if (sesliKomutAktif && !sesTanimaHataIzin) sesliTanimaZamanla(oturum, 100);
 };
 try {
 sesTanimaBaslatiliyor = true;
@@ -1094,7 +1097,6 @@ else if (sesliKomutAktif && !sesTanimaHataIzin) sesliTanimaZamanla(oturum, 1200)
 }
 }, gecikme);
 }
-
 function sesliKomutlariEtkinlestir() {
 if (!SpeechRecognitionAPI) return;
 if (sesliKomutAktif && (sesTanima || yenidenDinlemeZamanlayici)) return;
