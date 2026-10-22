@@ -1003,6 +1003,8 @@ let yenidenDinlemeZamanlayici = null;
 let sesTanimaBaslatiliyor = false;
 let sesTanimaCalisiyor = false;
 let sesTanimaHataIzin = false;
+let sonKomutZamani = 0;
+let sonKomutTuru = '';
 let sesTanimaOturumu = 0;
 
 function sesliMetniTemizle(metin) {
@@ -1019,6 +1021,7 @@ return String(metin)
 
 function sesliKomutuUygula(metin) {
 const temiz = sesliMetniTemizle(metin);
+const simdi = Date.now();
 if (!temiz) return;
 const kelimeler = temiz.split(' ');
 let komut = '';
@@ -1027,6 +1030,9 @@ else if (kelimeler.some(k => ['durdur', 'dur', 'beklet', 'duraklat'].includes(k)
 else if (kelimeler.some(k => ['sonraki', 'ileri', 'atla'].includes(k))) komut = 'sonraki';
 else if (kelimeler.some(k => ['onceki', 'geri'].includes(k))) komut = 'onceki';
 if (!komut) return;
+if (komut === sonKomutTuru && simdi - sonKomutZamani < 650) return;
+sonKomutTuru = komut;
+sonKomutZamani = simdi;
 if (komut === 'baslat') {
 if (!timerState.isRunning) startTimer();
 } else if (komut === 'durdur') {
@@ -1393,7 +1399,6 @@ icon.innerHTML = '<path d="M8 5v14l11-7z"/>';
 }
 }
 function skipNext() {
-if (timerState.phase === 'finished') return;
 const wasRunning = timerState.isRunning;
 if (timerState.intervalId) {
 clearInterval(timerState.intervalId);
@@ -1411,7 +1416,6 @@ document.getElementById('timerWrap').classList.add('running');
 }
 }
 function skipPrev() {
-if (timerState.phase === 'idle') return;
 const wasRunning = timerState.isRunning;
 if (timerState.intervalId) {
 clearInterval(timerState.intervalId);
@@ -1419,7 +1423,7 @@ timerState.intervalId = null;
 }
 clearScheduledBeeps();
 prevPhase();
-if (timerState.phase === 'idle' || timerState.phase === 'finished') return;
+if (timerState.phase === 'finished') return;
 if (wasRunning) {
 timerState.isRunning = true;
 timerState.endTime = Date.now() + timerState.timeLeft * 1000;
