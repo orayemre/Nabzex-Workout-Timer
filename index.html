@@ -349,6 +349,7 @@ TEKRAR EKLE
 </div>
 </div>
 </div>
+<div class="toast" id="toast"></div>
 <script>
 let presets = [];
 let editingPresetId = null;
@@ -385,52 +386,38 @@ try { osc.stop(); } catch (e) {}
 });
 scheduledBeepNodes = [];
 }
-function scheduleBeep(atTime, frequency = 880, duration = 0.16, rampDuration = 0.15) {
+function scheduleBeep(atTime) {
 if (!audioCtx || appVolume === 0) return;
 const oscillator = audioCtx.createOscillator();
 const gainNode = audioCtx.createGain();
 oscillator.connect(gainNode);
 gainNode.connect(audioCtx.destination);
 oscillator.type = 'triangle';
-oscillator.frequency.value = frequency;
-gainNode.gain.setValueAtTime(appVolume * 1.2, atTime);
-gainNode.gain.exponentialRampToValueAtTime(0.001, atTime + rampDuration);
+oscillator.frequency.value = 880;
+gainNode.gain.setValueAtTime(appVolume, atTime);
+gainNode.gain.exponentialRampToValueAtTime(0.001, atTime + 0.15);
 oscillator.start(atTime);
-oscillator.stop(atTime + duration);
+oscillator.stop(atTime + 0.16);
 scheduledBeepNodes.push(oscillator);
-}
-function scheduleBeep1(atTime) {
-scheduleBeep(atTime, 1318, 0.30, 0.33);
-}
-function scheduleBeep2(atTime) {
-scheduleBeep(atTime, 880, 0.25, 0.25);
-}
-function scheduleBeep3(atTime) {
-scheduleBeep(atTime, 440, 0.25, 0.25);
 }
 function scheduleAudioForPhase(remainingSec, isPhaseStart) {
 clearScheduledBeeps();
 if (!audioCtx || appVolume === 0) return;
 const base = audioCtx.currentTime + 0.05;
 if (isPhaseStart) {
-if (timerState.phase === 'finished') {
-scheduleBeep3(base);
-scheduleBeep3(base + 0.25);
-} else {
-scheduleBeep2(base);
-scheduleBeep2(base + 0.25);
-}
+scheduleBeep(base);
+scheduleBeep(base + 0.25);
 }
 if (timerState.phase === 'work' || timerState.phase === 'warmup') {
 [3, 2, 1].forEach(v => {
 const offset = remainingSec - v;
-if (offset > 0.05) scheduleBeep1(base + offset);
+if (offset > 0.05) scheduleBeep(base + offset);
 });
 }
 if (timerState.phase === 'rest') {
 [10, 9, 8, 7, 6, 5, 4, 3, 2, 1].forEach(v => {
 const offset = remainingSec - v;
-if (offset > 0.05) scheduleBeep1(base + offset);
+if (offset > 0.05) scheduleBeep(base + offset);
 });
 }
 }
@@ -717,7 +704,6 @@ return `
 <span class="stat-chip"><span class="dot" style="background:var(--work)"></span>Çalışma <strong>${formatTime(p.work)}</strong></span>
 <span class="stat-chip"><span class="dot" style="background:var(--rest)"></span>Dinlenme <strong>${formatTime(p.rest)}</strong></span>
 <span class="stat-chip"><span class="dot" style="background:var(--accent)"></span>Tur <strong>${p.rounds}</strong></span>
-${p.repCounts && p.repCounts.reduce((a,b)=>a+b,0) > 0 ? `<span class="stat-chip"><span class="dot" style="background:#a855f7"></span>Tekrar <strong>${p.repCounts.reduce((a,b)=>a+b,0)}</strong></span>` : ''}
 </div>
 </div>
 `;
