@@ -1043,9 +1043,9 @@ function sesliTanimaZamanla(oturum, gecikme = 450) {
 if (!sesliKomutAktif || sesTanimaHataIzin || yenidenDinlemeZamanlayici) return;
 yenidenDinlemeZamanlayici = setTimeout(() => {
 yenidenDinlemeZamanlayici = null;
-if (!sesliKomutAktif || oturum !== sesTanimaOturumu || sesTanimaHataIzin || sesTanimaBaslatiliyor) return;
+if (!sesliKomutAktif || oturum !== sesTanimaOturumu || sesTanimaHataIzin) return;
 if (!SpeechRecognitionAPI) return;
-if (sesTanima && !sesTanimaCalisiyor) {
+if (sesTanima && !sesTanimaCalisiyor && !sesTanimaBaslatiliyor) {
 try {
 sesTanimaBaslatiliyor = true;
 sesTanima.start();
@@ -1054,6 +1054,7 @@ return;
 sesTanima = null;
 }
 }
+if (sesTanima && sesTanimaCalisiyor) return;
 const tanima = new SpeechRecognitionAPI();
 sesTanima = tanima;
 tanima.lang = 'tr-TR';
@@ -1068,7 +1069,7 @@ sesTanimaCalisiyor = true;
 tanima.onresult = event => {
 if (oturum !== sesTanimaOturumu || tanima !== sesTanima) return;
 for (let i = event.resultIndex; i < event.results.length; i++) {
-if (event.results[i][0]) sesliKomutuUygula(event.results[i][0].transcript);
+if (event.results[i].isFinal && event.results[i][0]) sesliKomutuUygula(event.results[i][0].transcript);
 }
 };
 tanima.onerror = event => {
