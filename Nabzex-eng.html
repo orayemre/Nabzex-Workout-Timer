@@ -1378,10 +1378,10 @@ const sesTemiz=t=>t.replace(/[İIıŞşĞğÇçÖöÜüÂâÎîÛû]/g,c=>sesHar
 let sesAktif=false
 let sesNesne=null
 function sesKomutBul(t){
-if(t.includes("next"))return "next"
+if(t.includes("next")||t.includes("nex"))return "next"
 if(t.includes("previous")||t.includes("back"))return "prev"
-if(t.includes("stop")||t.includes("pause"))return "stop"
-if(t.includes("start")||t.includes("begin")||t.includes("play"))return "start"
+if(t.includes("stop")||t.includes("top"))return "stop"
+if(t.includes("start")||t.includes("star")||t.includes("play"))return "start"
 return null
 }
 function sesKomutUygula(k){
