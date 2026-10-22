@@ -1408,7 +1408,6 @@ timerState.intervalId = null;
 }
 clearScheduledBeeps();
 nextPhase();
-if (timerState.phase === 'finished') return;
 if (wasRunning) {
 timerState.isRunning = true;
 timerState.endTime = Date.now() + timerState.timeLeft * 1000;
@@ -1425,7 +1424,6 @@ timerState.intervalId = null;
 }
 clearScheduledBeeps();
 prevPhase();
-if (timerState.phase === 'finished') return;
 if (wasRunning) {
 timerState.isRunning = true;
 timerState.endTime = Date.now() + timerState.timeLeft * 1000;
