@@ -1379,6 +1379,8 @@ let sesAktif=false
 let sesNesne=null
 let sesIzinVar=false
 let sesIzinBekliyor=null
+let sesHata=0
+let sesZaman=null
 function sesIzinAl(){
 if(sesIzinVar)return Promise.resolve(true)
 if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return Promise.resolve(true)
@@ -1387,7 +1389,7 @@ sesIzinBekliyor=navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{
 s.getTracks().forEach(t=>t.stop())
 sesIzinVar=true
 sesIzinBekliyor=null
-return true
+return new Promise(res=>setTimeout(()=>res(true),400))
 }).catch(()=>{
 sesIzinBekliyor=null
 return false
@@ -1413,6 +1415,16 @@ document.getElementById("nextBtn").click()
 document.getElementById("prevBtn").click()
 }
 }
+function sesDene(){
+if(!sesAktif||sesNesne||sesHata>=6)return
+sesIzinAl().then(ok=>{
+if(!ok){
+sesHata++
+return
+}
+sesBaslat()
+})
+}
 function sesBaslat(){
 if(!SesTanima||!sesAktif||sesNesne)return
 const r=new SesTanima
@@ -1421,6 +1433,10 @@ r.lang="tr-TR"
 r.continuous=true
 r.interimResults=true
 r.maxAlternatives=5
+r.onaudiostart=()=>{
+sesHata=0
+clearTimeout(sesZaman)
+}
 r.onresult=e=>{
 if(islendi)return
 for(let i=e.resultIndex;i<e.results.length;i++){
@@ -1436,35 +1452,48 @@ return
 }
 }
 r.onerror=e=>{
-if(e.error==="not-allowed"||e.error==="service-not-allowed"){
+if(e.error==="not-allowed"||e.error==="service-not-allowed"||e.error==="audio-capture"){
 sesIzinVar=false
-sesAktif=false
+sesHata++
 }
 }
 r.onend=()=>{
-sesNesne=null
-if(sesAktif)setTimeout(sesBaslat,250)
+clearTimeout(sesZaman)
+if(sesNesne===r)sesNesne=null
+if(sesAktif)setTimeout(sesDene,300)
 }
 sesNesne=r
+sesZaman=setTimeout(()=>{
+if(sesNesne===r){
+try{r.abort()}catch(x){}
+setTimeout(()=>{
+if(sesNesne===r)sesNesne=null
+},300)
+}
+},4000)
 try{r.start()}catch(x){
+clearTimeout(sesZaman)
 sesNesne=null
-if(sesAktif)setTimeout(sesBaslat,500)
+sesHata++
 }
 }
 function sesDurdur(){
 sesAktif=false
+clearTimeout(sesZaman)
 if(sesNesne){
 try{sesNesne.abort()}catch(x){}
+sesNesne=null
 }
 }
+setInterval(()=>{
+if(sesAktif&&!sesNesne)sesDene()
+},1500)
 const sesEskiTimerGoster=showTimerView
 showTimerView=function(){
 sesEskiTimerGoster()
 sesAktif=true
-sesIzinAl().then(ok=>{
-if(ok&&sesAktif)setTimeout(sesBaslat,150)
-else sesAktif=false
-})
+sesHata=0
+sesDene()
 }
 const sesEskiPresetGoster=showPresetView
 showPresetView=function(){
