@@ -1380,6 +1380,7 @@ let sesNesne=null
 let sesHazir=false
 let sesZaman=null
 let sesBasla=0
+let sesSon=0
 function sesKomutBul(t){
 if(t.includes("sonraki")||t==="sonra")return "next"
 if(t.includes("onceki")||t==="once")return "prev"
@@ -1399,6 +1400,17 @@ document.getElementById("nextBtn").click()
 document.getElementById("prevBtn").click()
 }
 }
+function sesKapat(r){
+try{r.abort()}catch(x){}
+setTimeout(()=>{
+if(sesNesne===r){
+clearTimeout(sesZaman)
+sesNesne=null
+sesHazir=false
+if(sesAktif)sesBaslat()
+}
+},600)
+}
 function sesBaslat(){
 if(!SesTanima||!sesAktif||sesNesne)return
 const r=new SesTanima
@@ -1409,9 +1421,14 @@ r.interimResults=true
 r.maxAlternatives=5
 r.onaudiostart=()=>{
 sesHazir=true
+sesSon=Date.now()
 clearTimeout(sesZaman)
 }
+r.onspeechstart=()=>{
+sesSon=Date.now()
+}
 r.onresult=e=>{
+sesSon=Date.now()
 if(islendi||sesNesne!==r)return
 for(let i=e.resultIndex;i<e.results.length;i++){
 for(let j=0;j<e.results[i].length;j++){
@@ -1419,7 +1436,7 @@ const k=sesKomutBul(sesTemiz(e.results[i][j].transcript))
 if(k){
 islendi=true
 sesKomutUygula(k)
-r.abort()
+sesKapat(r)
 return
 }
 }
@@ -1439,10 +1456,9 @@ if(sesAktif)setTimeout(sesBaslat,250)
 sesNesne=r
 sesHazir=false
 sesBasla=Date.now()
+sesSon=Date.now()
 sesZaman=setTimeout(()=>{
-if(sesNesne===r&&!sesHazir){
-try{r.abort()}catch(x){}
-}
+if(sesNesne===r&&!sesHazir)sesKapat(r)
 },1500)
 try{r.start()}catch(x){
 clearTimeout(sesZaman)
@@ -1452,19 +1468,8 @@ if(sesAktif)setTimeout(sesBaslat,500)
 }
 function sesYenile(){
 sesAktif=true
-if(sesNesne){
-const eski=sesNesne
-try{eski.abort()}catch(x){}
-setTimeout(()=>{
-if(sesNesne===eski){
-sesNesne=null
-sesHazir=false
-sesBaslat()
-}
-},400)
-}else{
-sesBaslat()
-}
+if(sesNesne)sesKapat(sesNesne)
+else sesBaslat()
 }
 function sesAc(){
 if(sesAktif)return
@@ -1483,15 +1488,13 @@ if(!sesNesne){
 sesBaslat()
 return
 }
-if(!sesHazir&&Date.now()-sesBasla>3000){
-const eski=sesNesne
-try{eski.abort()}catch(x){}
-setTimeout(()=>{
-if(sesNesne===eski){
-sesNesne=null
-sesBaslat()
+const simdi=Date.now()
+if(!sesHazir&&simdi-sesBasla>3000){
+sesKapat(sesNesne)
+return
 }
-},400)
+if(sesHazir&&simdi-sesBasla>40000&&simdi-sesSon>2500){
+sesKapat(sesNesne)
 }
 },1500)
 const sesEskiTimerGoster=showTimerView
