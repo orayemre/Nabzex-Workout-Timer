@@ -1377,6 +1377,23 @@ const sesHarf={"İ":"i","I":"i","ı":"i","Ş":"s","ş":"s","Ğ":"g","ğ":"g","Ç
 const sesTemiz=t=>t.replace(/[İIıŞşĞğÇçÖöÜüÂâÎîÛû]/g,c=>sesHarf[c]).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"")
 let sesAktif=false
 let sesNesne=null
+let sesIzinVar=false
+let sesIzinBekliyor=null
+function sesIzinAl(){
+if(sesIzinVar)return Promise.resolve(true)
+if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return Promise.resolve(true)
+if(sesIzinBekliyor)return sesIzinBekliyor
+sesIzinBekliyor=navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{
+s.getTracks().forEach(t=>t.stop())
+sesIzinVar=true
+sesIzinBekliyor=null
+return true
+}).catch(()=>{
+sesIzinBekliyor=null
+return false
+})
+return sesIzinBekliyor
+}
 function sesKomutBul(t){
 if(t.includes("next")||t.includes("nex"))return "next"
 if(t.includes("previous")||t.includes("back"))return "prev"
@@ -1419,14 +1436,20 @@ return
 }
 }
 r.onerror=e=>{
-if(e.error==="not-allowed"||e.error==="service-not-allowed")sesAktif=false
+if(e.error==="not-allowed"||e.error==="service-not-allowed"){
+sesIzinVar=false
+sesAktif=false
+}
 }
 r.onend=()=>{
 sesNesne=null
-if(sesAktif)setTimeout(sesBaslat,200)
+if(sesAktif)setTimeout(sesBaslat,250)
 }
 sesNesne=r
-try{r.start()}catch(x){sesNesne=null}
+try{r.start()}catch(x){
+sesNesne=null
+if(sesAktif)setTimeout(sesBaslat,500)
+}
 }
 function sesDurdur(){
 sesAktif=false
@@ -1438,14 +1461,20 @@ const sesEskiTimerGoster=showTimerView
 showTimerView=function(){
 sesEskiTimerGoster()
 sesAktif=true
-sesBaslat()
+sesIzinAl().then(ok=>{
+if(ok&&sesAktif)setTimeout(sesBaslat,150)
+else sesAktif=false
+})
 }
 const sesEskiPresetGoster=showPresetView
 showPresetView=function(){
 sesEskiPresetGoster()
 sesDurdur()
 }
-document.addEventListener("pointerdown",()=>initAudio(),{once:true})
+document.addEventListener("pointerdown",()=>{
+initAudio()
+sesIzinAl()
+},{once:true})
 </script>
 </body>
 </html>
