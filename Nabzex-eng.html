@@ -8,6 +8,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <style>
 :root{--bg:#0a0e1a;--bg-card:#2d3d59;--bg-card-dark:#192334;--bg-elevated:#1e293d;--border:#2a3245;--fg:#e8ecf3;--muted:#8893a8;--accent:#ff6b35;--work:#22c55e;--work-glow:rgba(34,197,94,0.4);--rest:#3b82f6;--rest-glow:rgba(59,130,246,0.4);--warmup:#f59e0b;--warmup-glow:rgba(245,158,11,0.4);--danger:#ef4444;--finished:#a855f7}
 *{-webkit-touch-callout:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;outline:none;border:0;outline:0;box-sizing:border-box;margin:0;padding:0}
@@ -1380,6 +1383,7 @@ let sesNesne=null
 let sesHazir=false
 let sesZaman=null
 let sesBasla=0
+let sesSon=0
 function sesKomutBul(t){
 if(t.includes("next")||t.includes("nex"))return "next"
 if(t.includes("previous")||t.includes("back"))return "prev"
@@ -1399,6 +1403,17 @@ document.getElementById("nextBtn").click()
 document.getElementById("prevBtn").click()
 }
 }
+function sesKapat(r){
+try{r.abort()}catch(x){}
+setTimeout(()=>{
+if(sesNesne===r){
+clearTimeout(sesZaman)
+sesNesne=null
+sesHazir=false
+if(sesAktif)sesBaslat()
+}
+},600)
+}
 function sesBaslat(){
 if(!SesTanima||!sesAktif||sesNesne)return
 const r=new SesTanima
@@ -1409,9 +1424,14 @@ r.interimResults=true
 r.maxAlternatives=5
 r.onaudiostart=()=>{
 sesHazir=true
+sesSon=Date.now()
 clearTimeout(sesZaman)
 }
+r.onspeechstart=()=>{
+sesSon=Date.now()
+}
 r.onresult=e=>{
+sesSon=Date.now()
 if(islendi||sesNesne!==r)return
 for(let i=e.resultIndex;i<e.results.length;i++){
 for(let j=0;j<e.results[i].length;j++){
@@ -1419,7 +1439,7 @@ const k=sesKomutBul(sesTemiz(e.results[i][j].transcript))
 if(k){
 islendi=true
 sesKomutUygula(k)
-r.abort()
+sesKapat(r)
 return
 }
 }
@@ -1439,10 +1459,9 @@ if(sesAktif)setTimeout(sesBaslat,250)
 sesNesne=r
 sesHazir=false
 sesBasla=Date.now()
+sesSon=Date.now()
 sesZaman=setTimeout(()=>{
-if(sesNesne===r&&!sesHazir){
-try{r.abort()}catch(x){}
-}
+if(sesNesne===r&&!sesHazir)sesKapat(r)
 },1500)
 try{r.start()}catch(x){
 clearTimeout(sesZaman)
@@ -1452,19 +1471,8 @@ if(sesAktif)setTimeout(sesBaslat,500)
 }
 function sesYenile(){
 sesAktif=true
-if(sesNesne){
-const eski=sesNesne
-try{eski.abort()}catch(x){}
-setTimeout(()=>{
-if(sesNesne===eski){
-sesNesne=null
-sesHazir=false
-sesBaslat()
-}
-},400)
-}else{
-sesBaslat()
-}
+if(sesNesne)sesKapat(sesNesne)
+else sesBaslat()
 }
 function sesAc(){
 if(sesAktif)return
@@ -1483,15 +1491,13 @@ if(!sesNesne){
 sesBaslat()
 return
 }
-if(!sesHazir&&Date.now()-sesBasla>3000){
-const eski=sesNesne
-try{eski.abort()}catch(x){}
-setTimeout(()=>{
-if(sesNesne===eski){
-sesNesne=null
-sesBaslat()
+const simdi=Date.now()
+if(!sesHazir&&simdi-sesBasla>3000){
+sesKapat(sesNesne)
+return
 }
-},400)
+if(sesHazir&&simdi-sesBasla>40000&&simdi-sesSon>2500){
+sesKapat(sesNesne)
 }
 },1500)
 const sesEskiTimerGoster=showTimerView
