@@ -1377,25 +1377,7 @@ const sesHarf={"İ":"i","I":"i","ı":"i","Ş":"s","ş":"s","Ğ":"g","ğ":"g","Ç
 const sesTemiz=t=>t.replace(/[İIıŞşĞğÇçÖöÜüÂâÎîÛû]/g,c=>sesHarf[c]).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"")
 let sesAktif=false
 let sesNesne=null
-let sesIzinVar=false
-let sesIzinBekliyor=null
-let sesHata=0
 let sesZaman=null
-function sesIzinAl(){
-if(sesIzinVar)return Promise.resolve(true)
-if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return Promise.resolve(true)
-if(sesIzinBekliyor)return sesIzinBekliyor
-sesIzinBekliyor=navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{
-s.getTracks().forEach(t=>t.stop())
-sesIzinVar=true
-sesIzinBekliyor=null
-return new Promise(res=>setTimeout(()=>res(true),400))
-}).catch(()=>{
-sesIzinBekliyor=null
-return false
-})
-return sesIzinBekliyor
-}
 function sesKomutBul(t){
 if(t.includes("sonraki")||t==="sonra")return "next"
 if(t.includes("onceki")||t==="once")return "prev"
@@ -1415,16 +1397,6 @@ document.getElementById("nextBtn").click()
 document.getElementById("prevBtn").click()
 }
 }
-function sesDene(){
-if(!sesAktif||sesNesne||sesHata>=6)return
-sesIzinAl().then(ok=>{
-if(!ok){
-sesHata++
-return
-}
-sesBaslat()
-})
-}
 function sesBaslat(){
 if(!SesTanima||!sesAktif||sesNesne)return
 const r=new SesTanima
@@ -1433,10 +1405,7 @@ r.lang="tr-TR"
 r.continuous=true
 r.interimResults=true
 r.maxAlternatives=5
-r.onaudiostart=()=>{
-sesHata=0
-clearTimeout(sesZaman)
-}
+r.onaudiostart=()=>clearTimeout(sesZaman)
 r.onresult=e=>{
 if(islendi)return
 for(let i=e.resultIndex;i<e.results.length;i++){
@@ -1452,58 +1421,38 @@ return
 }
 }
 r.onerror=e=>{
-if(e.error==="not-allowed"||e.error==="service-not-allowed"||e.error==="audio-capture"){
-sesIzinVar=false
-sesHata++
-}
+if(e.error==="not-allowed"||e.error==="service-not-allowed")sesAktif=false
 }
 r.onend=()=>{
 clearTimeout(sesZaman)
 if(sesNesne===r)sesNesne=null
-if(sesAktif)setTimeout(sesDene,300)
+if(sesAktif)setTimeout(sesBaslat,250)
 }
 sesNesne=r
 sesZaman=setTimeout(()=>{
 if(sesNesne===r){
 try{r.abort()}catch(x){}
-setTimeout(()=>{
-if(sesNesne===r)sesNesne=null
-},300)
 }
-},4000)
+},5000)
 try{r.start()}catch(x){
 clearTimeout(sesZaman)
 sesNesne=null
-sesHata++
+if(sesAktif)setTimeout(sesBaslat,500)
 }
 }
-function sesDurdur(){
-sesAktif=false
-clearTimeout(sesZaman)
-if(sesNesne){
-try{sesNesne.abort()}catch(x){}
-sesNesne=null
-}
-}
-setInterval(()=>{
-if(sesAktif&&!sesNesne)sesDene()
-},1500)
-const sesEskiTimerGoster=showTimerView
-showTimerView=function(){
-sesEskiTimerGoster()
+function sesAc(){
 sesAktif=true
-sesHata=0
-sesDene()
+if(!sesNesne)sesBaslat()
 }
-const sesEskiPresetGoster=showPresetView
-showPresetView=function(){
-sesEskiPresetGoster()
-sesDurdur()
-}
-document.addEventListener("pointerdown",()=>{
-initAudio()
-sesIzinAl()
-},{once:true})
+document.addEventListener("pointerdown",sesAc,true)
+document.addEventListener("touchend",sesAc,true)
+document.addEventListener("click",sesAc,true)
+document.addEventListener("visibilitychange",()=>{
+if(document.visibilityState==="visible"&&sesAktif&&!sesNesne)sesBaslat()
+})
+setInterval(()=>{
+if(sesAktif&&!sesNesne)sesBaslat()
+},1500)
 </script>
 </body>
 </html>
