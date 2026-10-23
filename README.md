@@ -16,7 +16,7 @@ Turkish: [ https://<kullanici-adi>.github.io/Nabzex-Workout-Timer/](https://oray
 
 - Custom Preset Management: Create, edit, duplicate, and reorder workout presets. 
 - Round & Rep Tracking: Set unique target repetitions for every round.
-- Voice Commands: Stage transitions can be executed as voice commands when inside a study/work session.
+- Voice Commands: Stage transitions can be executed as voice commands when inside a study/work session.  
   Working voice commands:  
   English: start, stop, back, next  
   Turkish: başlat, durdur, önceki, sonraki  
