@@ -1377,23 +1377,9 @@ const sesHarf={"İ":"i","I":"i","ı":"i","Ş":"s","ş":"s","Ğ":"g","ğ":"g","Ç
 const sesTemiz=t=>t.replace(/[İIıŞşĞğÇçÖöÜüÂâÎîÛû]/g,c=>sesHarf[c]).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"")
 let sesAktif=false
 let sesNesne=null
-let sesIzinVar=false
-let sesIzinBekliyor=null
-function sesIzinAl(){
-if(sesIzinVar)return Promise.resolve(true)
-if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return Promise.resolve(true)
-if(sesIzinBekliyor)return sesIzinBekliyor
-sesIzinBekliyor=navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{
-s.getTracks().forEach(t=>t.stop())
-sesIzinVar=true
-sesIzinBekliyor=null
-return true
-}).catch(()=>{
-sesIzinBekliyor=null
-return false
-})
-return sesIzinBekliyor
-}
+let sesHazir=false
+let sesZaman=null
+let sesBasla=0
 function sesKomutBul(t){
 if(t.includes("sonraki")||t==="sonra")return "next"
 if(t.includes("onceki")||t==="once")return "prev"
@@ -1421,8 +1407,12 @@ r.lang="tr-TR"
 r.continuous=true
 r.interimResults=true
 r.maxAlternatives=5
+r.onaudiostart=()=>{
+sesHazir=true
+clearTimeout(sesZaman)
+}
 r.onresult=e=>{
-if(islendi)return
+if(islendi||sesNesne!==r)return
 for(let i=e.resultIndex;i<e.results.length;i++){
 for(let j=0;j<e.results[i].length;j++){
 const k=sesKomutBul(sesTemiz(e.results[i][j].transcript))
@@ -1436,45 +1426,79 @@ return
 }
 }
 r.onerror=e=>{
-if(e.error==="not-allowed"||e.error==="service-not-allowed"){
-sesIzinVar=false
-sesAktif=false
-}
+if(e.error==="not-allowed"||e.error==="service-not-allowed")sesAktif=false
 }
 r.onend=()=>{
+clearTimeout(sesZaman)
+if(sesNesne===r){
 sesNesne=null
+sesHazir=false
+}
 if(sesAktif)setTimeout(sesBaslat,250)
 }
 sesNesne=r
+sesHazir=false
+sesBasla=Date.now()
+sesZaman=setTimeout(()=>{
+if(sesNesne===r&&!sesHazir){
+try{r.abort()}catch(x){}
+}
+},1500)
 try{r.start()}catch(x){
+clearTimeout(sesZaman)
 sesNesne=null
 if(sesAktif)setTimeout(sesBaslat,500)
 }
 }
-function sesDurdur(){
-sesAktif=false
+function sesYenile(){
+sesAktif=true
 if(sesNesne){
-try{sesNesne.abort()}catch(x){}
+const eski=sesNesne
+try{eski.abort()}catch(x){}
+setTimeout(()=>{
+if(sesNesne===eski){
+sesNesne=null
+sesHazir=false
+sesBaslat()
+}
+},400)
+}else{
+sesBaslat()
 }
 }
+function sesAc(){
+if(sesAktif)return
+sesAktif=true
+sesBaslat()
+}
+document.addEventListener("pointerdown",sesAc,true)
+document.addEventListener("touchend",sesAc,true)
+document.addEventListener("click",sesAc,true)
+document.addEventListener("visibilitychange",()=>{
+if(document.visibilityState==="visible"&&sesAktif)sesYenile()
+})
+setInterval(()=>{
+if(!sesAktif)return
+if(!sesNesne){
+sesBaslat()
+return
+}
+if(!sesHazir&&Date.now()-sesBasla>3000){
+const eski=sesNesne
+try{eski.abort()}catch(x){}
+setTimeout(()=>{
+if(sesNesne===eski){
+sesNesne=null
+sesBaslat()
+}
+},400)
+}
+},1500)
 const sesEskiTimerGoster=showTimerView
 showTimerView=function(){
 sesEskiTimerGoster()
-sesAktif=true
-sesIzinAl().then(ok=>{
-if(ok&&sesAktif)setTimeout(sesBaslat,150)
-else sesAktif=false
-})
+sesYenile()
 }
-const sesEskiPresetGoster=showPresetView
-showPresetView=function(){
-sesEskiPresetGoster()
-sesDurdur()
-}
-document.addEventListener("pointerdown",()=>{
-initAudio()
-sesIzinAl()
-},{once:true})
 </script>
 </body>
 </html>
